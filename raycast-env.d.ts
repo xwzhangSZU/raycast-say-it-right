@@ -8,22 +8,22 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Analysis Provider - Default model provider for analysis. */
+  /** Analysis Provider - Preferred provider when BOTH API keys are set. If only one key is filled, that provider is used automatically. */
   "defaultAnalysisProvider": "openai" | "qwen",
   /** OpenAI API Key - Used for OpenAI analysis and TTS. */
   "openaiApiKey"?: string,
   /** OpenAI Analysis Model - Chat model for analysis. */
   "openaiAnalysisModel": string,
   /** OpenAI TTS Voice - Voice for OpenAI TTS. */
-  "openaiTtsVoice": string,
+  "openaiTtsVoice": "alloy" | "ash" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
   /** Qwen (DashScope) API Key - Used for Qwen analysis and TTS. */
   "qwenApiKey"?: string,
   /** Qwen Region - DashScope region (affects base URL). */
   "qwenRegion": "beijing" | "intl",
-  /** Qwen Analysis Model - Chat model for analysis. */
-  "qwenAnalysisModel": string,
-  /** Qwen TTS Voice - Voice for Qwen TTS. */
-  "qwenTtsVoice": string,
+  /** Qwen Analysis Model - Qwen chat model used for analysis. */
+  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.6-plus" | "qwen3.7-max",
+  /** Qwen TTS Voice - Voice for Qwen TTS (all support English). */
+  "qwenTtsVoice": "Cherry" | "Jennifer" | "Katerina" | "Ethan" | "Ryan" | "Elias" | "Nofish",
   /** TTS Provider - Which provider synthesizes audio. */
   "ttsProvider": "follow-analysis" | "openai" | "qwen",
   /** Slow Playback Rate - Target teaching speed for slow playback (e.g. 0.6). */
