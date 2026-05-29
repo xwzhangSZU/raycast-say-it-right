@@ -24,6 +24,8 @@ export async function speak(
 ): Promise<void> {
   const provider = resolveTtsProvider(analysisProvider, prefs);
   const cfg = resolveTtsConfig(provider, prefs);
+  // `slow` selects between two cached audio slots (normal vs teaching-slow);
+  // the numeric slowRate is baked into the synthesis instructions, not the key.
   const key = audioCacheKey({ text, provider, voice: cfg.voice, slow });
 
   let path = cachedAudioPath(key, "wav");

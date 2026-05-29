@@ -1,5 +1,12 @@
-import { getSelectedText, showToast, Toast, Detail } from "@raycast/api";
-import { speak, repeatLast } from "./tts/speak";
+import {
+  getSelectedText,
+  showToast,
+  Toast,
+  Detail,
+  ActionPanel,
+  Action,
+  Icon,
+} from "@raycast/api";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { ProsodyAnalysis } from "./types";
 import type { ProviderName } from "./llm/config";
@@ -15,13 +22,35 @@ import {
 } from "./lib/cache";
 import { AnalysisDetail } from "./components/AnalysisDetail";
 import { TextInputForm } from "./components/TextInputForm";
+import { speak, repeatLast } from "./tts/speak";
 
-function AnalysisPlaceholder({ isLoading }: { isLoading: boolean }) {
+function AnalysisPlaceholder({
+  isLoading,
+  failed,
+  onRetry,
+}: {
+  isLoading: boolean;
+  failed?: boolean;
+  onRetry?: () => void;
+}) {
+  const markdown = failed
+    ? "# Could not analyze\n\nSomething went wrong (see the toast). Press **⌘R** to retry."
+    : "# 🗣️ Analyzing…\n\nReading your selection and asking the model.";
   return (
     <Detail
       isLoading={isLoading}
-      markdown={
-        "# 🗣️ Analyzing…\n\nReading your selection and asking the model."
+      markdown={markdown}
+      actions={
+        failed && onRetry ? (
+          <ActionPanel>
+            <Action
+              title="Retry"
+              icon={Icon.ArrowClockwise}
+              shortcut={{ modifiers: ["cmd"], key: "r" }}
+              onAction={onRetry}
+            />
+          </ActionPanel>
+        ) : undefined
       }
     />
   );
@@ -36,6 +65,7 @@ export default function Command() {
     prefs.defaultAnalysisProvider || "openai",
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -56,6 +86,7 @@ export default function Command() {
   const run = useCallback(
     async (input: string, prov: ProviderName, forceFresh = false) => {
       setIsLoading(true);
+      setFailed(false);
       try {
         const isWord = isSingleWord(input);
         const key = analysisCacheKey(input, prov, "GA");
@@ -69,6 +100,7 @@ export default function Command() {
           setAnalysis(result);
         }
       } catch (err) {
+        setFailed(true);
         await reportError(err);
       } finally {
         setIsLoading(false);
@@ -95,20 +127,37 @@ export default function Command() {
   }, [text, provider, run]);
 
   const onPlay = useCallback(() => {
-    if (analysis) {
-      void showToast({ style: Toast.Style.Animated, title: "Speaking…" });
-      void speak(analysis.text, provider, prefs, false).catch(reportError);
-    }
+    if (!analysis) return;
+    void (async () => {
+      const toast = await showToast({
+        style: Toast.Style.Animated,
+        title: "Speaking…",
+      });
+      try {
+        await speak(analysis.text, provider, prefs, false);
+        toast.style = Toast.Style.Success;
+        toast.title = "Played";
+      } catch (err) {
+        await reportError(err);
+      }
+    })();
   }, [analysis, provider, prefs]);
 
   const onSlow = useCallback(() => {
-    if (analysis) {
-      void showToast({
+    if (!analysis) return;
+    void (async () => {
+      const toast = await showToast({
         style: Toast.Style.Animated,
         title: "Speaking slowly…",
       });
-      void speak(analysis.text, provider, prefs, true).catch(reportError);
-    }
+      try {
+        await speak(analysis.text, provider, prefs, true);
+        toast.style = Toast.Style.Success;
+        toast.title = "Played slowly";
+      } catch (err) {
+        await reportError(err);
+      }
+    })();
   }, [analysis, provider, prefs]);
 
   const onRepeat = useCallback(() => {
@@ -132,7 +181,15 @@ export default function Command() {
     );
   }
   if (!analysis) {
-    return <AnalysisPlaceholder isLoading={isLoading} />;
+    return (
+      <AnalysisPlaceholder
+        isLoading={isLoading}
+        failed={failed}
+        onRetry={() => {
+          if (text) void run(text, provider, true);
+        }}
+      />
+    );
   }
   return (
     <AnalysisDetail
