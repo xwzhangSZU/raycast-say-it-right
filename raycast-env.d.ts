@@ -26,20 +26,26 @@ type ExtensionPreferences = {
   "qwenTtsVoice": "Cherry" | "Jennifer" | "Katerina" | "Ethan" | "Ryan" | "Elias" | "Nofish",
   /** TTS Provider - Which provider synthesizes audio. */
   "ttsProvider": "follow-analysis" | "openai" | "qwen",
-  /** Slow Playback Rate - Target teaching speed for slow playback (e.g. 0.6). */
-  "slowRate": string
+  /** Shadowing Loop Count - How many times the Shadowing Loop repeats the sentence. */
+  "loopCount": string,
+  /** Shadowing Loop Gap (seconds) - Pause between repeats in the Shadowing Loop. */
+  "loopGap": string
 }
 
 /** Preferences accessible in all the extension's commands */
 declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
-  /** Preferences accessible in the `analyze-text` command */
-  export type AnalyzeText = ExtensionPreferences & {}
+  /** Preferences accessible in the `analyze-selection` command */
+  export type AnalyzeSelection = ExtensionPreferences & {}
+  /** Preferences accessible in the `practice-sentence` command */
+  export type PracticeSentence = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
-  /** Arguments passed to the `analyze-text` command */
-  export type AnalyzeText = {}
+  /** Arguments passed to the `analyze-selection` command */
+  export type AnalyzeSelection = {}
+  /** Arguments passed to the `practice-sentence` command */
+  export type PracticeSentence = {}
 }
 
