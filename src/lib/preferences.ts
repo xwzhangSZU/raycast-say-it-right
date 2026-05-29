@@ -1,15 +1,10 @@
 import { getPreferenceValues } from "@raycast/api";
-import type { ProviderName, RawPrefs } from "../llm/config";
 
-export interface Prefs extends RawPrefs {
-  defaultAnalysisProvider: ProviderName;
-  openaiTtsVoice?: string;
-  qwenTtsVoice?: string;
-  ttsProvider?: "follow-analysis" | "openai" | "qwen";
-  loopCount?: string;
-  loopGap?: string;
-}
-
-export function getPrefs(): Prefs {
-  return getPreferenceValues<Prefs>();
+/**
+ * Returns the extension's preferences. `Preferences` is the global type
+ * auto-generated from package.json in `raycast-env.d.ts`, so it never drifts
+ * out of sync with the manifest.
+ */
+export function getPrefs(): Preferences {
+  return getPreferenceValues<Preferences>();
 }
