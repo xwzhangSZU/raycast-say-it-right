@@ -9,6 +9,9 @@ export interface AnalysisDetailProps {
   isLoading: boolean;
   onSwitchProvider: () => void;
   onNewExample?: () => void;
+  onPlay: () => void;
+  onSlow: () => void;
+  onRepeat: () => void;
 }
 
 export function AnalysisDetail(props: AnalysisDetailProps) {
@@ -33,6 +36,23 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
       }
       actions={
         <ActionPanel>
+          <Action
+            title="Play Example"
+            icon={Icon.Play}
+            onAction={props.onPlay}
+          />
+          <Action
+            title="Play Slowly"
+            icon={Icon.LightBulb}
+            shortcut={{ modifiers: ["cmd"], key: "s" }}
+            onAction={props.onSlow}
+          />
+          <Action
+            title="Repeat"
+            icon={Icon.Repeat}
+            shortcut={{ modifiers: ["cmd"], key: "r" }}
+            onAction={props.onRepeat}
+          />
           <Action
             title={`Switch to ${other}`}
             icon={Icon.Switch}

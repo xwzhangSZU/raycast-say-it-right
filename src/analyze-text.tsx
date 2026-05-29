@@ -1,4 +1,5 @@
 import { getSelectedText, showToast, Toast, Detail } from "@raycast/api";
+import { speak, repeatLast } from "./tts/speak";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { ProsodyAnalysis } from "./types";
 import type { ProviderName } from "./llm/config";
@@ -7,7 +8,11 @@ import { analyze } from "./llm/analyze";
 import { isSingleWord } from "./lib/detect";
 import { getPrefs } from "./lib/preferences";
 import { reportError } from "./lib/errors";
-import { analysisCacheKey, readAnalysisCache, writeAnalysisCache } from "./lib/cache";
+import {
+  analysisCacheKey,
+  readAnalysisCache,
+  writeAnalysisCache,
+} from "./lib/cache";
 import { AnalysisDetail } from "./components/AnalysisDetail";
 import { TextInputForm } from "./components/TextInputForm";
 
@@ -15,7 +20,9 @@ function AnalysisPlaceholder({ isLoading }: { isLoading: boolean }) {
   return (
     <Detail
       isLoading={isLoading}
-      markdown={"# 🗣️ Analyzing…\n\nReading your selection and asking the model."}
+      markdown={
+        "# 🗣️ Analyzing…\n\nReading your selection and asking the model."
+      }
     />
   );
 }
@@ -25,7 +32,9 @@ export default function Command() {
   const [text, setText] = useState<string | null>(null);
   const [needsInput, setNeedsInput] = useState(false);
   const [analysis, setAnalysis] = useState<ProsodyAnalysis | null>(null);
-  const [provider, setProvider] = useState<ProviderName>(prefs.defaultAnalysisProvider || "openai");
+  const [provider, setProvider] = useState<ProviderName>(
+    prefs.defaultAnalysisProvider || "openai",
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -75,12 +84,42 @@ export default function Command() {
   const onSwitchProvider = useCallback(() => {
     const next: ProviderName = provider === "openai" ? "qwen" : "openai";
     setProvider(next);
-    void showToast({ style: Toast.Style.Animated, title: `Re-analyzing with ${next}…` });
+    void showToast({
+      style: Toast.Style.Animated,
+      title: `Re-analyzing with ${next}…`,
+    });
   }, [provider]);
 
   const onNewExample = useCallback(() => {
     if (text) void run(text, provider, true);
   }, [text, provider, run]);
+
+  const onPlay = useCallback(() => {
+    if (analysis) {
+      void showToast({ style: Toast.Style.Animated, title: "Speaking…" });
+      void speak(analysis.text, provider, prefs, false).catch(reportError);
+    }
+  }, [analysis, provider, prefs]);
+
+  const onSlow = useCallback(() => {
+    if (analysis) {
+      void showToast({
+        style: Toast.Style.Animated,
+        title: "Speaking slowly…",
+      });
+      void speak(analysis.text, provider, prefs, true).catch(reportError);
+    }
+  }, [analysis, provider, prefs]);
+
+  const onRepeat = useCallback(() => {
+    void repeatLast().then((ok) => {
+      if (!ok)
+        void showToast({
+          style: Toast.Style.Failure,
+          title: "Nothing to repeat yet",
+        });
+    });
+  }, []);
 
   if (needsInput && !text) {
     return (
@@ -102,6 +141,9 @@ export default function Command() {
       isLoading={isLoading}
       onSwitchProvider={onSwitchProvider}
       onNewExample={analysis.isGeneratedExample ? onNewExample : undefined}
+      onPlay={onPlay}
+      onSlow={onSlow}
+      onRepeat={onRepeat}
     />
   );
 }
