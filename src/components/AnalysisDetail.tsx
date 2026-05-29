@@ -43,7 +43,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
           />
           <Action
             title="Play Slowly"
-            icon={Icon.LightBulb}
+            icon={Icon.Gauge}
             shortcut={{ modifiers: ["cmd"], key: "s" }}
             onAction={props.onSlow}
           />
