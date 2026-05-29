@@ -41,4 +41,12 @@ describe("synthesizeOpenAI", () => {
       synthesizeOpenAI("x", { rate: 1, instructions: "" }, cfg, fetchImpl),
     ).rejects.toBeInstanceOf(TtsError);
   });
+  it("throws TtsError when the request times out", async () => {
+    const fetchImpl = vi.fn(async () => {
+      const e = new Error("timed out");
+      e.name = "TimeoutError";
+      throw e;
+    }) as unknown as typeof fetch;
+    await expect(synthesizeOpenAI("x", { rate: 1, instructions: "" }, cfg, fetchImpl)).rejects.toBeInstanceOf(TtsError);
+  });
 });

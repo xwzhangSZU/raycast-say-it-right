@@ -1,6 +1,8 @@
 import type { TtsConfig, SynthesizeOptions } from "./types";
 import { TtsError, type SynthResult } from "./openai";
 
+const TIMEOUT_MS = 60_000;
+
 export async function synthesizeQwen(
   text: string,
   opts: SynthesizeOptions,
@@ -16,17 +18,29 @@ export async function synthesizeQwen(
   };
   if (styled) body.parameters = { instructions: opts.instructions };
 
-  const res = await fetchImpl(
-    `${base}/services/aigc/multimodal-generation/generation`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
+  let res: Awaited<ReturnType<typeof fetch>>;
+  try {
+    res = await fetchImpl(
+      `${base}/services/aigc/multimodal-generation/generation`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cfg.apiKey}`,
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
       },
-      body: JSON.stringify(body),
-    },
-  );
+    );
+  } catch (err) {
+    const name = err instanceof Error ? err.name : "";
+    if (name === "TimeoutError" || name === "AbortError")
+      throw new TtsError(
+        `Qwen TTS timed out after ${TIMEOUT_MS / 1000}s. Check your network and the region/key.`,
+      );
+    throw new TtsError(`Qwen TTS network error: ${String(err).slice(0, 150)}`);
+  }
+
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
     throw new TtsError(`Qwen TTS ${res.status}: ${errBody.slice(0, 150)}`);
@@ -38,7 +52,21 @@ export async function synthesizeQwen(
   if (audio?.data)
     return { bytes: Buffer.from(audio.data, "base64"), ext: "wav" };
   if (audio?.url) {
-    const a = await fetchImpl(audio.url);
+    let a: Awaited<ReturnType<typeof fetch>>;
+    try {
+      a = await fetchImpl(audio.url, {
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+    } catch (err) {
+      const name = err instanceof Error ? err.name : "";
+      if (name === "TimeoutError" || name === "AbortError")
+        throw new TtsError(
+          `Qwen TTS audio download timed out after ${TIMEOUT_MS / 1000}s. Check your network and the region/key.`,
+        );
+      throw new TtsError(
+        `Qwen TTS audio download network error: ${String(err).slice(0, 150)}`,
+      );
+    }
     return { bytes: Buffer.from(await a.arrayBuffer()), ext: "wav" };
   }
   throw new TtsError("Qwen TTS: no audio in response");

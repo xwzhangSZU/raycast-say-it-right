@@ -5,7 +5,7 @@
   "description": "Analyze selected English text for stress, intonation, rhythm; hear a model reading.",
   "icon": "extension-icon.png",
   "author": "xianwei_zhang",
-  "categories": ["Productivity", "Other"],
+  "categories": ["Productivity"],
   "license": "MIT",
   "commands": [
     {
@@ -64,7 +64,7 @@
     { "name": "loopCount", "title": "Shadowing Loop Count", "description": "How many times the Shadowing Loop repeats the sentence.", "type": "textfield", "required": false, "default": "3" },
     { "name": "loopGap", "title": "Shadowing Loop Gap (seconds)", "description": "Pause between repeats in the Shadowing Loop.", "type": "textfield", "required": false, "default": "1.0" }
   ],
-  "dependencies": { "@raycast/api": "^1.80.0", "@raycast/utils": "^1.17.0", "zod": "^3.23.0" },
+  "dependencies": { "@raycast/api": "^1.80.0", "zod": "^3.23.0" },
   "devDependencies": {
     "@raycast/eslint-config": "^1.0.11", "@types/node": "^22.0.0", "@types/react": "^19.0.0",
     "eslint": "^8.57.0", "prettier": "^3.3.0", "typescript": "^5.5.0", "vitest": "^2.0.0"
