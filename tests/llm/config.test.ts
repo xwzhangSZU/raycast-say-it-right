@@ -21,7 +21,7 @@ describe("resolveAnalysisConfig", () => {
       qwenRegion: "intl",
     });
     expect(c.baseURL).toBe(QWEN_BASE.intl);
-    expect(c.model).toBe("qwen-flash");
+    expect(c.model).toBe("qwen3.6-flash");
   });
   it("throws MissingKeyError when key absent", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);

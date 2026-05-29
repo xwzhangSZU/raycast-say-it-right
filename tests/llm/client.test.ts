@@ -36,4 +36,18 @@ describe("chatJSON", () => {
     const f = mockFetch(401, { error: "bad key" });
     await expect(chatJSON(cfg, "s", "u", f)).rejects.toBeInstanceOf(ChatError);
   });
+  it("retries without response_format when the first call returns 400", async () => {
+    let call = 0;
+    const f = vi.fn(async () => {
+      call += 1;
+      if (call === 1) return { ok: false, status: 400, json: async () => ({}), text: async () => "response_format unsupported" } as any;
+      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: "{\"ok\":true}" } }] }), text: async () => "" } as any;
+    }) as unknown as typeof fetch;
+    const out = await chatJSON(cfg, "s", "u", f);
+    expect(out).toBe("{\"ok\":true}");
+    expect((f as unknown as { mock: { calls: unknown[] } }).mock.calls.length).toBe(2);
+    // second call body must NOT contain response_format
+    const secondBody = ((f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[1][1].body) as string;
+    expect(secondBody).not.toContain("response_format");
+  });
 });
