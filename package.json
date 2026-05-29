@@ -4,7 +4,7 @@
   "title": "English Speaking Coach",
   "description": "Analyze selected English text for stress, intonation, rhythm; hear a model reading.",
   "icon": "extension-icon.png",
-  "author": "xianweizhang",
+  "author": "xianwei_zhang",
   "categories": ["Productivity", "Other"],
   "license": "MIT",
   "commands": [
