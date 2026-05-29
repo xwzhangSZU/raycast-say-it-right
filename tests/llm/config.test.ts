@@ -23,6 +23,12 @@ describe("resolveAnalysisConfig", () => {
     expect(c.baseURL).toBe(QWEN_BASE.intl);
     expect(c.model).toBe("qwen3.6-flash");
   });
+  it("sets enable_thinking:false in Qwen extraBody and no extraBody for OpenAI", () => {
+    const qwen = resolveAnalysisConfig("qwen", { qwenApiKey: "sk" });
+    expect(qwen.extraBody).toEqual({ enable_thinking: false });
+    const openai = resolveAnalysisConfig("openai", { openaiApiKey: "sk" });
+    expect(openai.extraBody).toBeUndefined();
+  });
   it("throws MissingKeyError when key absent", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);
   });

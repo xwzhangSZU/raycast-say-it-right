@@ -52,5 +52,6 @@ export function resolveAnalysisConfig(
     baseURL: QWEN_BASE[region],
     apiKey: prefs.qwenApiKey,
     model: prefs.qwenAnalysisModel || "qwen3.6-flash",
+    extraBody: { enable_thinking: false },
   };
 }
