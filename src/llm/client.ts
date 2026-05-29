@@ -28,7 +28,10 @@ export async function chatJSON(
     if (useJsonFormat) body.response_format = { type: "json_object" };
     return fetchImpl(`${cfg.baseURL}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cfg.apiKey}`,
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -46,15 +49,20 @@ export async function chatJSON(
         `Request to the model timed out after ${TIMEOUT_MS / 1000}s. Check your network, and that the Qwen Region matches your API key (Beijing for mainland-China keys, International otherwise).`,
       );
     }
-    throw new ChatError(`Network error calling the model: ${String(err).slice(0, 150)}`);
+    throw new ChatError(
+      `Network error calling the model: ${String(err).slice(0, 150)}`,
+    );
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new ChatError(`Chat API ${res.status}: ${body.slice(0, 200)}`);
   }
-  const data = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: unknown } }[];
+  };
   const content = data?.choices?.[0]?.message?.content;
-  if (typeof content !== "string") throw new ChatError("Chat response had no text content");
+  if (typeof content !== "string")
+    throw new ChatError("Chat response had no text content");
   return content;
 }
