@@ -5,5 +5,5 @@
     "skipLibCheck": true, "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx", "resolveJsonModule": true, "moduleResolution": "node"
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*", "tests/**/*", "raycast-env.d.ts"]
 }
