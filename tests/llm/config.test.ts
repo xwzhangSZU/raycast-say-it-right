@@ -3,6 +3,7 @@ import {
   resolveAnalysisConfig,
   MissingKeyError,
   QWEN_BASE,
+  pickInitialProvider,
 } from "../../src/llm/config";
 
 describe("resolveAnalysisConfig", () => {
@@ -24,5 +25,19 @@ describe("resolveAnalysisConfig", () => {
   });
   it("throws MissingKeyError when key absent", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);
+  });
+});
+
+describe("pickInitialProvider", () => {
+  it("uses the only provider whose key is set", () => {
+    expect(pickInitialProvider({ openaiApiKey: "sk" })).toBe("openai");
+    expect(pickInitialProvider({ qwenApiKey: "sk" })).toBe("qwen");
+  });
+  it("falls back to the preferred provider when both keys are set", () => {
+    expect(pickInitialProvider({ openaiApiKey: "a", qwenApiKey: "b", defaultAnalysisProvider: "qwen" })).toBe("qwen");
+    expect(pickInitialProvider({ openaiApiKey: "a", qwenApiKey: "b" })).toBe("openai");
+  });
+  it("ignores blank/whitespace keys", () => {
+    expect(pickInitialProvider({ openaiApiKey: "  ", qwenApiKey: "sk" })).toBe("qwen");
   });
 });

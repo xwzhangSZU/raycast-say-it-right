@@ -17,16 +17,36 @@
     }
   ],
   "preferences": [
-    { "name": "defaultAnalysisProvider", "title": "Analysis Provider", "description": "Default model provider for analysis.", "type": "dropdown", "required": false, "default": "openai",
+    { "name": "defaultAnalysisProvider", "title": "Analysis Provider", "description": "Preferred provider when BOTH API keys are set. If only one key is filled, that provider is used automatically.", "type": "dropdown", "required": false, "default": "openai",
       "data": [ { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" } ] },
     { "name": "openaiApiKey", "title": "OpenAI API Key", "description": "Used for OpenAI analysis and TTS.", "type": "password", "required": false },
     { "name": "openaiAnalysisModel", "title": "OpenAI Analysis Model", "description": "Chat model for analysis.", "type": "textfield", "required": false, "default": "gpt-4o-mini" },
-    { "name": "openaiTtsVoice", "title": "OpenAI TTS Voice", "description": "Voice for OpenAI TTS.", "type": "textfield", "required": false, "default": "alloy" },
+    { "name": "openaiTtsVoice", "title": "OpenAI TTS Voice", "description": "Voice for OpenAI TTS.", "type": "dropdown", "required": false, "default": "alloy",
+      "data": [
+        { "title": "Alloy", "value": "alloy" },
+        { "title": "Ash", "value": "ash" },
+        { "title": "Coral", "value": "coral" },
+        { "title": "Echo", "value": "echo" },
+        { "title": "Fable", "value": "fable" },
+        { "title": "Nova", "value": "nova" },
+        { "title": "Onyx", "value": "onyx" },
+        { "title": "Sage", "value": "sage" },
+        { "title": "Shimmer", "value": "shimmer" }
+      ] },
     { "name": "qwenApiKey", "title": "Qwen (DashScope) API Key", "description": "Used for Qwen analysis and TTS.", "type": "password", "required": false },
     { "name": "qwenRegion", "title": "Qwen Region", "description": "DashScope region (affects base URL).", "type": "dropdown", "required": false, "default": "beijing",
       "data": [ { "title": "Beijing (cn)", "value": "beijing" }, { "title": "International (Singapore)", "value": "intl" } ] },
     { "name": "qwenAnalysisModel", "title": "Qwen Analysis Model", "description": "Chat model for analysis.", "type": "textfield", "required": false, "default": "qwen-flash" },
-    { "name": "qwenTtsVoice", "title": "Qwen TTS Voice", "description": "Voice for Qwen TTS.", "type": "textfield", "required": false, "default": "Cherry" },
+    { "name": "qwenTtsVoice", "title": "Qwen TTS Voice", "description": "Voice for Qwen TTS (all support English).", "type": "dropdown", "required": false, "default": "Cherry",
+      "data": [
+        { "title": "Cherry — warm, bright female", "value": "Cherry" },
+        { "title": "Jennifer — expressive female", "value": "Jennifer" },
+        { "title": "Katerina — relaxed, conversational female", "value": "Katerina" },
+        { "title": "Ethan — natural, friendly male", "value": "Ethan" },
+        { "title": "Ryan — energetic male", "value": "Ryan" },
+        { "title": "Elias — clear, explanatory male", "value": "Elias" },
+        { "title": "Nofish — lively, youthful", "value": "Nofish" }
+      ] },
     { "name": "ttsProvider", "title": "TTS Provider", "description": "Which provider synthesizes audio.", "type": "dropdown", "required": false, "default": "follow-analysis",
       "data": [ { "title": "Follow Analysis Provider", "value": "follow-analysis" }, { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" } ] },
     { "name": "slowRate", "title": "Slow Playback Rate", "description": "Target teaching speed for slow playback (e.g. 0.6).", "type": "textfield", "required": false, "default": "0.6" }
