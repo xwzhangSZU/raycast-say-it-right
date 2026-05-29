@@ -56,7 +56,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
           <Action
             title={`Switch to ${other}`}
             icon={Icon.Switch}
-            shortcut={{ modifiers: ["cmd"], key: "p" }}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
             onAction={props.onSwitchProvider}
           />
           {props.onNewExample ? (
