@@ -36,7 +36,12 @@
     { "name": "qwenApiKey", "title": "Qwen (DashScope) API Key", "description": "Used for Qwen analysis and TTS.", "type": "password", "required": false },
     { "name": "qwenRegion", "title": "Qwen Region", "description": "DashScope region (affects base URL).", "type": "dropdown", "required": false, "default": "beijing",
       "data": [ { "title": "Beijing (cn)", "value": "beijing" }, { "title": "International (Singapore)", "value": "intl" } ] },
-    { "name": "qwenAnalysisModel", "title": "Qwen Analysis Model", "description": "Chat model for analysis.", "type": "textfield", "required": false, "default": "qwen-flash" },
+    { "name": "qwenAnalysisModel", "title": "Qwen Analysis Model", "description": "Qwen chat model used for analysis.", "type": "dropdown", "required": false, "default": "qwen3.6-flash",
+      "data": [
+        { "title": "qwen3.6-flash — fast & low-cost (recommended)", "value": "qwen3.6-flash" },
+        { "title": "qwen3.6-plus — balanced quality", "value": "qwen3.6-plus" },
+        { "title": "qwen3.7-max — most capable (flagship)", "value": "qwen3.7-max" }
+      ] },
     { "name": "qwenTtsVoice", "title": "Qwen TTS Voice", "description": "Voice for Qwen TTS (all support English).", "type": "dropdown", "required": false, "default": "Cherry",
       "data": [
         { "title": "Cherry — warm, bright female", "value": "Cherry" },
