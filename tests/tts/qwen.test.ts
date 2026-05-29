@@ -20,7 +20,7 @@ describe("synthesizeQwen", () => {
     })) as unknown as typeof fetch;
     const out = await synthesizeQwen(
       "hello",
-      { slow: false, instructions: "" },
+      { rate: 1, instructions: "" },
       cfg,
       fetchImpl,
     );
@@ -44,7 +44,7 @@ describe("synthesizeQwen", () => {
       });
     const out = await synthesizeQwen(
       "hi",
-      { slow: false, instructions: "" },
+      { rate: 1, instructions: "" },
       cfg,
       fetchImpl as unknown as typeof fetch,
     );
@@ -60,7 +60,7 @@ describe("synthesizeQwen", () => {
     })) as unknown as typeof fetch;
     await synthesizeQwen(
       "hi",
-      { slow: true, instructions: "speak slowly" },
+      { rate: 0.5, instructions: "speak slowly" },
       cfg,
       fetchImpl,
     );

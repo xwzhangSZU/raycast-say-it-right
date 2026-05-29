@@ -18,7 +18,7 @@ describe("synthesizeOpenAI", () => {
     })) as unknown as typeof fetch;
     const out = await synthesizeOpenAI(
       "hello",
-      { slow: false, instructions: "read clearly" },
+      { rate: 1, instructions: "read clearly" },
       cfg,
       fetchImpl,
     );
@@ -38,7 +38,7 @@ describe("synthesizeOpenAI", () => {
       text: async () => "boom",
     })) as unknown as typeof fetch;
     await expect(
-      synthesizeOpenAI("x", { slow: false, instructions: "" }, cfg, fetchImpl),
+      synthesizeOpenAI("x", { rate: 1, instructions: "" }, cfg, fetchImpl),
     ).rejects.toBeInstanceOf(TtsError);
   });
 });

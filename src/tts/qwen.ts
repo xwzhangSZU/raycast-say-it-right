@@ -8,12 +8,13 @@ export async function synthesizeQwen(
   fetchImpl: typeof fetch = fetch,
 ): Promise<SynthResult> {
   const base = cfg.baseURL ?? "https://dashscope.aliyuncs.com/api/v1";
-  const model = opts.slow ? "qwen3-tts-instruct-flash" : cfg.model;
+  const styled = opts.rate < 1;
+  const model = styled ? "qwen3-tts-instruct-flash" : cfg.model;
   const body: Record<string, unknown> = {
     model,
     input: { text, voice: cfg.voice, language_type: "English" },
   };
-  if (opts.slow) body.parameters = { instructions: opts.instructions };
+  if (styled) body.parameters = { instructions: opts.instructions };
 
   const res = await fetchImpl(
     `${base}/services/aigc/multimodal-generation/generation`,

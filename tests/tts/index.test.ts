@@ -36,8 +36,8 @@ describe("resolveTtsConfig", () => {
 });
 
 describe("buildTtsInstructions", () => {
-  it("adds a slow-pace clause only when slow", () => {
-    expect(buildTtsInstructions(false, "0.6")).not.toMatch(/slowly/);
-    expect(buildTtsInstructions(true, "0.5")).toContain("50%");
+  it("adds a slow-pace clause only when rate < 1", () => {
+    expect(buildTtsInstructions(1)).not.toMatch(/slowly/);
+    expect(buildTtsInstructions(0.5)).toContain("50%");
   });
 });

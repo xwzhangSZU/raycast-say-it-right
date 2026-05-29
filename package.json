@@ -54,7 +54,8 @@
       ] },
     { "name": "ttsProvider", "title": "TTS Provider", "description": "Which provider synthesizes audio.", "type": "dropdown", "required": false, "default": "follow-analysis",
       "data": [ { "title": "Follow Analysis Provider", "value": "follow-analysis" }, { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" } ] },
-    { "name": "slowRate", "title": "Slow Playback Rate", "description": "Target teaching speed for slow playback (e.g. 0.6).", "type": "textfield", "required": false, "default": "0.6" }
+    { "name": "loopCount", "title": "Shadowing Loop Count", "description": "How many times the Shadowing Loop repeats the sentence.", "type": "textfield", "required": false, "default": "3" },
+    { "name": "loopGap", "title": "Shadowing Loop Gap (seconds)", "description": "Pause between repeats in the Shadowing Loop.", "type": "textfield", "required": false, "default": "1.0" }
   ],
   "dependencies": { "@raycast/api": "^1.80.0", "@raycast/utils": "^1.17.0", "zod": "^3.23.0" },
   "devDependencies": {

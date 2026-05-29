@@ -35,11 +35,10 @@ export function resolveTtsConfig(
   };
 }
 
-export function buildTtsInstructions(slow: boolean, slowRate: string): string {
+export function buildTtsInstructions(rate: number): string {
   const base =
     "Read this English sentence as a clear pronunciation model with a General American accent. Emphasize the stressed words, use natural rising and falling intonation, and pause briefly at commas.";
-  if (!slow) return base;
-  const rate = Number(slowRate) || 0.6;
+  if (rate >= 1) return base;
   const pct = Math.round(rate * 100);
   return `${base} Speak slowly and deliberately, at about ${pct}% of normal speed, as a teaching example.`;
 }

@@ -5,11 +5,11 @@ export interface TtsConfig {
   apiKey: string;
   voice: string;
   model: string;
-  baseURL?: string; // qwen only
+  baseURL?: string;
 }
 
 export interface SynthesizeOptions {
-  slow: boolean;
+  rate: number; // 1.0 = normal speed; < 1 = slower teaching pace
   instructions: string;
 }
 
@@ -17,5 +17,6 @@ export interface TtsPrefs extends RawPrefs {
   openaiTtsVoice?: string;
   qwenTtsVoice?: string;
   ttsProvider?: "follow-analysis" | "openai" | "qwen";
-  slowRate?: string;
+  loopCount?: string;
+  loopGap?: string;
 }
