@@ -26,12 +26,14 @@ describe("renderAnalysis", () => {
     expect(md).toContain(EXAMPLE.ipa);
     expect(md).toContain("finish‿early");
   });
-  it("keeps mark line and word line in each code block on adjacent lines", () => {
+  it("emits aligned mark/word staves (line pairs) within width-capped code blocks", () => {
     const blocks = md.split("```").filter((_, i) => i % 2 === 1);
     expect(blocks.length).toBe(2); // intonation + rhythm
     for (const b of blocks) {
-      const rows = b.trim().split("\n");
-      expect(rows.length).toBe(2);
+      const rows = b.split("\n").filter((r) => r.length > 0); // drop blank separators
+      expect(rows.length % 2).toBe(0); // mark line + word line pairs
+      expect(rows.length).toBeGreaterThanOrEqual(2);
+      for (const r of rows) expect([...r].length).toBeLessThanOrEqual(50); // chunked, never a runaway line
     }
   });
   it("renders the example-sentence subtitle for single-word input", () => {
@@ -43,5 +45,31 @@ describe("renderAnalysis", () => {
     const out = renderAnalysis(wordExample);
     expect(out).toContain("Example sentence for");
     expect(out).toContain("**call**");
+  });
+  it("includes a legend explaining the marks", () => {
+    expect(md).toContain("stressed");
+    expect(md).toContain("unstressed");
+    expect(md).toContain("linking");
+  });
+  it("wraps long input into multiple staves (marks stay above words)", () => {
+    const long = {
+      ...EXAMPLE,
+      thoughtGroups: [
+        {
+          tone: "fall" as const,
+          words: Array.from({ length: 20 }, (_, i) => ({
+            text: `word${i}`,
+            syllables: ["word"],
+            stressIndex: 0,
+            stressed: true,
+            nuclear: i === 19,
+          })),
+        },
+      ],
+    };
+    const out = renderAnalysis(long);
+    const firstBlock = out.split("```")[1];
+    const rows = firstBlock.split("\n").filter((r) => r.length > 0);
+    expect(rows.length).toBeGreaterThan(2); // more than one stave
   });
 });

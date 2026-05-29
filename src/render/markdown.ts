@@ -2,6 +2,9 @@ import type { ProsodyAnalysis, Word } from "../types";
 import { SYM, toneArrow } from "./symbols";
 import { alignColumns, type Col } from "./align";
 
+const MAX_WIDTH = 42; // max display columns per stave; keeps marks aligned above words (no independent wrap)
+const cpLen = (s: string): number => [...s].length;
+
 function formatWord(w: Word): string {
   if (w.stressed && w.stressIndex !== null) {
     return w.syllables
@@ -11,22 +14,45 @@ function formatWord(w: Word): string {
   return w.syllables.join(SYM.SYLLABLE_DOT).toLowerCase();
 }
 
-/**
- * Returns ONLY the beat-bearing (stressed) syllable in uppercase, for the Rhythm
- * block. This is intentionally NOT the full syllable chain — the Rhythm view shows
- * the stress/beat grid, while the Stress & Intonation block shows full words.
- */
+/** Returns ONLY the beat-bearing (stressed) syllable in uppercase, for the Rhythm block. */
 function rhythmBeatSyllable(w: Word): string {
   if (w.stressIndex !== null) return w.syllables[w.stressIndex].toUpperCase();
   return w.syllables.join("").toUpperCase();
 }
 
-function codeBlock(markLine: string, wordLine: string): string {
-  return `\`\`\`\n${markLine}\n${wordLine}\n\`\`\``;
+/**
+ * Pack columns into width-bounded chunks and emit each chunk's mark line directly
+ * above its word line (a "stave"), stacked vertically inside one code block. This
+ * guarantees marks stay above their words even when the sentence is long — instead
+ * of one giant line that Raycast soft-wraps independently from the line above it.
+ */
+function renderStaves(cols: Col[], gap = 2): string {
+  const chunks: Col[][] = [];
+  let cur: Col[] = [];
+  let curW = 0;
+  for (const c of cols) {
+    const w = Math.max(cpLen(c.mark), cpLen(c.word));
+    const add = (cur.length ? gap : 0) + w;
+    if (cur.length && curW + add > MAX_WIDTH) {
+      chunks.push(cur);
+      cur = [];
+      curW = 0;
+    }
+    cur.push(c);
+    curW += (cur.length > 1 ? gap : 0) + w;
+  }
+  if (cur.length) chunks.push(cur);
+
+  const lines: string[] = [];
+  chunks.forEach((chunk, i) => {
+    const { markLine, wordLine } = alignColumns(chunk, gap);
+    if (i > 0) lines.push("");
+    lines.push(markLine, wordLine);
+  });
+  return "```\n" + lines.join("\n") + "\n```";
 }
 
 export function renderAnalysis(a: ProsodyAnalysis): string {
-  // --- Stress & Intonation columns ---
   const intoCols: Col[] = [];
   a.thoughtGroups.forEach((g, gi) => {
     g.words.forEach((w) => {
@@ -37,9 +63,7 @@ export function renderAnalysis(a: ProsodyAnalysis): string {
     if (gi < a.thoughtGroups.length - 1)
       intoCols.push({ mark: "", word: SYM.GROUP });
   });
-  const into = alignColumns(intoCols);
 
-  // --- Rhythm columns ---
   const beatCols: Col[] = [];
   a.thoughtGroups.forEach((g, gi) => {
     g.words.forEach((w) => {
@@ -51,9 +75,7 @@ export function renderAnalysis(a: ProsodyAnalysis): string {
     if (gi < a.thoughtGroups.length - 1)
       beatCols.push({ mark: "", word: SYM.GROUP });
   });
-  const beat = alignColumns(beatCols);
 
-  // --- linking notes ---
   const links: string[] = [];
   a.thoughtGroups.forEach((g) =>
     g.words.forEach((w, i) => {
@@ -63,6 +85,8 @@ export function renderAnalysis(a: ProsodyAnalysis): string {
     }),
   );
 
+  const legend = `${SYM.STRESS} stressed   ${SYM.WEAK} unstressed   ${SYM.RISE}${SYM.FALL} rising/falling tone   ${SYM.GROUP} pause   ${SYM.LINK} linking`;
+
   const lines: string[] = [];
   lines.push("# 🗣️ How to say it");
   if (a.isGeneratedExample && a.sourceWord) {
@@ -71,12 +95,13 @@ export function renderAnalysis(a: ProsodyAnalysis): string {
   lines.push(`> ${a.text}`);
   lines.push("");
   lines.push("## Stress & Intonation");
-  lines.push(codeBlock(into.markLine, into.wordLine));
+  lines.push(renderStaves(intoCols));
+  lines.push(`*${legend}*`);
   lines.push(`\`${a.ipa}\``);
   if (links.length) lines.push(`*linking:* ${links.join("  ·  ")}`);
   lines.push("");
   lines.push("## Rhythm");
-  lines.push(codeBlock(beat.markLine, beat.wordLine));
+  lines.push(renderStaves(beatCols));
   if (a.notes) {
     lines.push("");
     lines.push(`> 💡 ${a.notes}`);
