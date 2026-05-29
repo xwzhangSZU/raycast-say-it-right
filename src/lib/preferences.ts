@@ -6,7 +6,8 @@ export interface Prefs extends RawPrefs {
   openaiTtsVoice?: string;
   qwenTtsVoice?: string;
   ttsProvider?: "follow-analysis" | "openai" | "qwen";
-  slowRate?: string;
+  loopCount?: string;
+  loopGap?: string;
 }
 
 export function getPrefs(): Prefs {

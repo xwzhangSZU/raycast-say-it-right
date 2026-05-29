@@ -1,8 +1,8 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, copyFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { tmpdir, homedir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 
@@ -13,7 +13,7 @@ export function audioCacheKey(parts: {
   text: string;
   provider: string;
   voice: string;
-  slow: boolean;
+  rate: number;
 }): string {
   return createHash("sha1")
     .update(JSON.stringify(parts))
@@ -42,4 +42,29 @@ export async function playAudio(
   exec: typeof execFileP = execFileP,
 ): Promise<void> {
   await exec("afplay", [path]);
+}
+
+/** Play the file `times` times with a gap between repeats — for shadowing practice. */
+export async function loopPlay(
+  path: string,
+  times: number,
+  gapMs: number,
+  exec: typeof execFileP = execFileP,
+): Promise<void> {
+  const n = Math.max(1, Math.floor(times));
+  for (let i = 0; i < n; i++) {
+    await playAudio(path, exec);
+    if (i < n - 1 && gapMs > 0)
+      await new Promise((resolve) => setTimeout(resolve, gapMs));
+  }
+}
+
+/** Copy a cached audio file into ~/Downloads; returns the destination path. */
+export async function exportToDownloads(
+  path: string,
+  filename: string,
+): Promise<string> {
+  const dest = join(homedir(), "Downloads", filename);
+  await copyFile(path, dest);
+  return dest;
 }

@@ -134,7 +134,7 @@ export default function Command() {
         title: "Speaking…",
       });
       try {
-        await speak(analysis.text, provider, prefs, false);
+        await speak(analysis.text, provider, prefs, 1);
         toast.style = Toast.Style.Success;
         toast.title = "Played";
       } catch (err) {
@@ -151,7 +151,7 @@ export default function Command() {
         title: "Speaking slowly…",
       });
       try {
-        await speak(analysis.text, provider, prefs, true);
+        await speak(analysis.text, provider, prefs, 0.75);
         toast.style = Toast.Style.Success;
         toast.title = "Played slowly";
       } catch (err) {

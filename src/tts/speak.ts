@@ -12,36 +12,69 @@ import {
   cachedAudioPath,
   writeAudioCache,
   playAudio,
+  loopPlay,
+  exportToDownloads,
 } from "./playback";
 
 let lastPlayedPath: string | null = null;
 
-export async function speak(
+async function synthCached(
   text: string,
   analysisProvider: ProviderName,
   prefs: TtsPrefs,
-  slow: boolean,
-): Promise<void> {
+  rate: number,
+): Promise<string> {
   const provider = resolveTtsProvider(analysisProvider, prefs);
   const cfg = resolveTtsConfig(provider, prefs);
-  // `slow` selects between two cached audio slots (normal vs teaching-slow);
-  // the numeric slowRate is baked into the synthesis instructions, not the key.
-  const key = audioCacheKey({ text, provider, voice: cfg.voice, slow });
-
+  const key = audioCacheKey({ text, provider, voice: cfg.voice, rate });
   let path = cachedAudioPath(key, "wav");
   if (!path) {
-    const opts = {
-      slow,
-      instructions: buildTtsInstructions(slow, prefs.slowRate || "0.6"),
-    };
+    const opts = { rate, instructions: buildTtsInstructions(rate) };
     const result =
       provider === "openai"
         ? await synthesizeOpenAI(text, opts, cfg)
         : await synthesizeQwen(text, opts, cfg);
     path = await writeAudioCache(key, result.ext, result.bytes);
   }
+  return path;
+}
+
+export async function speak(
+  text: string,
+  analysisProvider: ProviderName,
+  prefs: TtsPrefs,
+  rate: number,
+): Promise<void> {
+  const path = await synthCached(text, analysisProvider, prefs, rate);
   lastPlayedPath = path;
   await playAudio(path);
+}
+
+export async function speakLoop(
+  text: string,
+  analysisProvider: ProviderName,
+  prefs: TtsPrefs,
+  times: number,
+  gapMs: number,
+): Promise<void> {
+  const path = await synthCached(text, analysisProvider, prefs, 1);
+  lastPlayedPath = path;
+  await loopPlay(path, times, gapMs);
+}
+
+export async function exportAudio(
+  text: string,
+  analysisProvider: ProviderName,
+  prefs: TtsPrefs,
+): Promise<string> {
+  const path = await synthCached(text, analysisProvider, prefs, 1);
+  const slug =
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "clip";
+  return exportToDownloads(path, `say-it-right-${slug}.wav`);
 }
 
 export async function repeatLast(): Promise<boolean> {
