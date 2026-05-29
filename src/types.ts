@@ -1,17 +1,32 @@
 import { z } from "zod";
 
-export const ToneSchema = z.enum(["fall", "rise", "fall-rise", "rise-fall", "level"]);
-export const LinkSchema = z.enum(["liaison", "elision", "intrusion"]).nullable();
+export const ToneSchema = z.enum([
+  "fall",
+  "rise",
+  "fall-rise",
+  "rise-fall",
+  "level",
+]);
+export const LinkSchema = z
+  .enum(["liaison", "elision", "intrusion"])
+  .nullable();
 
-export const WordSchema = z.object({
-  text: z.string().min(1),
-  syllables: z.array(z.string().min(1)).min(1),
-  stressIndex: z.number().int().nonnegative().nullable(),
-  stressed: z.boolean(),
-  nuclear: z.boolean(),
-  ipa: z.string().optional(),
-  linkToNext: LinkSchema.optional(),
-});
+export const WordSchema = z
+  .object({
+    text: z.string().min(1),
+    syllables: z.array(z.string().min(1)).min(1),
+    stressIndex: z.number().int().nonnegative().nullable(),
+    stressed: z.boolean(),
+    nuclear: z.boolean(),
+    ipa: z.string().optional(),
+    linkToNext: LinkSchema.optional(),
+  })
+  .refine((w) => !w.nuclear || w.stressed, {
+    message: "A nuclear word must also be stressed",
+  })
+  .refine((w) => w.stressIndex === null || w.stressIndex < w.syllables.length, {
+    message: "stressIndex must be a valid syllable index",
+  });
 
 export const ThoughtGroupSchema = z.object({
   tone: ToneSchema,

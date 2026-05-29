@@ -11,13 +11,15 @@ describe("renderAnalysis", () => {
     expect(md).toContain("GIVE");
     expect(md).toContain("CALL");
   });
-  it("lowercases function words", () => {
-    expect(md).toMatch(/\bif\b/);
-    expect(md).toMatch(/\byou\b/);
+  it("lowercases function words inside the intonation block", () => {
+    const intoBlock = md.split("```")[1]; // content of the first fenced block
+    expect(intoBlock).toContain("if");
+    expect(intoBlock).toContain("you");
   });
-  it("shows the rising tone on the first group and falling on the second", () => {
-    expect(md).toContain("↗");
-    expect(md).toContain("↘");
+  it("attaches tone arrows to the nuclear (stressed) word", () => {
+    const intoBlock = md.split("```")[1];
+    expect(intoBlock).toContain("● ↗"); // rising nuclear (early)
+    expect(intoBlock).toContain("● ↘"); // falling nuclear (call)
   });
   it("marks the thought-group boundary and IPA and linking", () => {
     expect(md).toContain("‖");
@@ -31,5 +33,15 @@ describe("renderAnalysis", () => {
       const rows = b.trim().split("\n");
       expect(rows.length).toBe(2);
     }
+  });
+  it("renders the example-sentence subtitle for single-word input", () => {
+    const wordExample = {
+      ...EXAMPLE,
+      isGeneratedExample: true,
+      sourceWord: "call",
+    };
+    const out = renderAnalysis(wordExample);
+    expect(out).toContain("Example sentence for");
+    expect(out).toContain("**call**");
   });
 });
