@@ -11,13 +11,18 @@ function formatWord(w: Word): string {
   return w.syllables.join(SYM.SYLLABLE_DOT).toLowerCase();
 }
 
-function stressedSyllableUpper(w: Word): string {
+/**
+ * Returns ONLY the beat-bearing (stressed) syllable in uppercase, for the Rhythm
+ * block. This is intentionally NOT the full syllable chain — the Rhythm view shows
+ * the stress/beat grid, while the Stress & Intonation block shows full words.
+ */
+function rhythmBeatSyllable(w: Word): string {
   if (w.stressIndex !== null) return w.syllables[w.stressIndex].toUpperCase();
   return w.syllables.join("").toUpperCase();
 }
 
 function codeBlock(markLine: string, wordLine: string): string {
-  return "```\n" + markLine + "\n" + wordLine + "\n```";
+  return `\`\`\`\n${markLine}\n${wordLine}\n\`\`\``;
 }
 
 export function renderAnalysis(a: ProsodyAnalysis): string {
@@ -40,7 +45,7 @@ export function renderAnalysis(a: ProsodyAnalysis): string {
     g.words.forEach((w) => {
       beatCols.push({
         mark: w.stressed ? SYM.STRESS : SYM.WEAK,
-        word: w.stressed ? stressedSyllableUpper(w) : w.text.toLowerCase(),
+        word: w.stressed ? rhythmBeatSyllable(w) : w.text.toLowerCase(),
       });
     });
     if (gi < a.thoughtGroups.length - 1)
