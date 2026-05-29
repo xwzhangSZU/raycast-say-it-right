@@ -50,4 +50,10 @@ describe("chatJSON", () => {
     const secondBody = ((f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[1][1].body) as string;
     expect(secondBody).not.toContain("response_format");
   });
+  it("merges extraBody (e.g. enable_thinking) into the request body", async () => {
+    const f = mockFetch(200, { choices: [{ message: { content: "{}" } }] });
+    await chatJSON({ ...cfg, extraBody: { enable_thinking: false } }, "s", "u", f);
+    const body = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0][1].body as string;
+    expect(body).toContain("\"enable_thinking\":false");
+  });
 });
