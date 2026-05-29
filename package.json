@@ -1,0 +1,44 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "english-speaking-coach",
+  "title": "English Speaking Coach",
+  "description": "Analyze selected English text for stress, intonation, rhythm; hear a model reading.",
+  "icon": "extension-icon.png",
+  "author": "xianweizhang",
+  "categories": ["Productivity", "Other"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "analyze-text",
+      "title": "Analyze Text",
+      "subtitle": "Speaking Coach",
+      "description": "Analyze selected English text for stress, intonation, and rhythm.",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    { "name": "defaultAnalysisProvider", "title": "Analysis Provider", "description": "Default model provider for analysis.", "type": "dropdown", "required": false, "default": "openai",
+      "data": [ { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" } ] },
+    { "name": "openaiApiKey", "title": "OpenAI API Key", "description": "Used for OpenAI analysis and TTS.", "type": "password", "required": false },
+    { "name": "openaiAnalysisModel", "title": "OpenAI Analysis Model", "description": "Chat model for analysis.", "type": "textfield", "required": false, "default": "gpt-4o-mini" },
+    { "name": "openaiTtsVoice", "title": "OpenAI TTS Voice", "description": "Voice for OpenAI TTS.", "type": "textfield", "required": false, "default": "alloy" },
+    { "name": "qwenApiKey", "title": "Qwen (DashScope) API Key", "description": "Used for Qwen analysis and TTS.", "type": "password", "required": false },
+    { "name": "qwenRegion", "title": "Qwen Region", "description": "DashScope region (affects base URL).", "type": "dropdown", "required": false, "default": "beijing",
+      "data": [ { "title": "Beijing (cn)", "value": "beijing" }, { "title": "International (Singapore)", "value": "intl" } ] },
+    { "name": "qwenAnalysisModel", "title": "Qwen Analysis Model", "description": "Chat model for analysis.", "type": "textfield", "required": false, "default": "qwen-flash" },
+    { "name": "qwenTtsVoice", "title": "Qwen TTS Voice", "description": "Voice for Qwen TTS.", "type": "textfield", "required": false, "default": "Cherry" },
+    { "name": "ttsProvider", "title": "TTS Provider", "description": "Which provider synthesizes audio.", "type": "dropdown", "required": false, "default": "follow-analysis",
+      "data": [ { "title": "Follow Analysis Provider", "value": "follow-analysis" }, { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" } ] },
+    { "name": "slowRate", "title": "Slow Playback Rate", "description": "Target teaching speed for slow playback (e.g. 0.6).", "type": "textfield", "required": false, "default": "0.6" }
+  ],
+  "dependencies": { "@raycast/api": "^1.80.0", "@raycast/utils": "^1.17.0", "zod": "^3.23.0" },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.11", "@types/node": "^22.0.0", "@types/react": "^19.0.0",
+    "eslint": "^8.57.0", "prettier": "^3.3.0", "typescript": "^5.5.0", "vitest": "^2.0.0"
+  },
+  "scripts": {
+    "build": "ray build -e dist", "dev": "ray develop", "lint": "ray lint",
+    "fix-lint": "ray lint --fix", "test": "vitest run", "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  }
+}
