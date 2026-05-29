@@ -9,7 +9,10 @@ describe("buildPrompt", () => {
     expect(user).toContain("serendipity");
   });
   it("analyzes phrase input as-is", () => {
-    const { user } = buildPrompt("give me a call", { isWord: false, accent: "GA" });
+    const { user } = buildPrompt("give me a call", {
+      isWord: false,
+      accent: "GA",
+    });
     expect(user).toContain("Analyze this text");
   });
 });

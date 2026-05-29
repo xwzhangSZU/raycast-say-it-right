@@ -15,18 +15,27 @@ export async function synthesizeQwen(
   };
   if (opts.slow) body.parameters = { instructions: opts.instructions };
 
-  const res = await fetchImpl(`${base}/services/aigc/multimodal-generation/generation`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
-    body: JSON.stringify(body),
-  });
+  const res = await fetchImpl(
+    `${base}/services/aigc/multimodal-generation/generation`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cfg.apiKey}`,
+      },
+      body: JSON.stringify(body),
+    },
+  );
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
     throw new TtsError(`Qwen TTS ${res.status}: ${errBody.slice(0, 150)}`);
   }
-  const data = (await res.json()) as { output?: { audio?: { url?: string; data?: string } } };
+  const data = (await res.json()) as {
+    output?: { audio?: { url?: string; data?: string } };
+  };
   const audio = data?.output?.audio;
-  if (audio?.data) return { bytes: Buffer.from(audio.data, "base64"), ext: "wav" };
+  if (audio?.data)
+    return { bytes: Buffer.from(audio.data, "base64"), ext: "wav" };
   if (audio?.url) {
     const a = await fetchImpl(audio.url);
     return { bytes: Buffer.from(await a.arrayBuffer()), ext: "wav" };
