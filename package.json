@@ -9,10 +9,17 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "analyze-text",
-      "title": "Analyze Text",
-      "subtitle": "Speaking Coach",
-      "description": "Analyze selected English text for stress, intonation, and rhythm.",
+      "name": "analyze-selection",
+      "title": "Analyze Selection",
+      "subtitle": "Say It Right",
+      "description": "Analyze the selected English text for stress, intonation, and rhythm.",
+      "mode": "view"
+    },
+    {
+      "name": "practice-sentence",
+      "title": "Practice a Sentence",
+      "subtitle": "Say It Right",
+      "description": "Type or paste an English sentence to see how to say it.",
       "mode": "view"
     }
   ],
