@@ -1,4 +1,4 @@
-# English Speaking Coach (Raycast)
+# Say It Right (Raycast)
 
 Analyze selected English text for **stress, intonation, rhythm, and linking**, see a clear text visualization, and hear a model reading via neural TTS (OpenAI or Qwen) — with slow playback and repeat.
 
