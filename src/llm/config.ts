@@ -21,6 +21,19 @@ export class MissingKeyError extends Error {
   }
 }
 
+export function pickInitialProvider(prefs: {
+  openaiApiKey?: string;
+  qwenApiKey?: string;
+  defaultAnalysisProvider?: ProviderName;
+}): ProviderName {
+  const hasOpenAI = !!prefs.openaiApiKey?.trim();
+  const hasQwen = !!prefs.qwenApiKey?.trim();
+  if (hasOpenAI && !hasQwen) return "openai";
+  if (hasQwen && !hasOpenAI) return "qwen";
+  // both filled (or neither) → honor the preferred provider, default openai
+  return prefs.defaultAnalysisProvider ?? "openai";
+}
+
 export function resolveAnalysisConfig(
   provider: ProviderName,
   prefs: RawPrefs,

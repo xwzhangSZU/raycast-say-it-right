@@ -10,7 +10,7 @@ import {
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { ProsodyAnalysis } from "./types";
 import type { ProviderName } from "./llm/config";
-import { resolveAnalysisConfig } from "./llm/config";
+import { resolveAnalysisConfig, pickInitialProvider } from "./llm/config";
 import { analyze } from "./llm/analyze";
 import { isSingleWord } from "./lib/detect";
 import { getPrefs } from "./lib/preferences";
@@ -62,7 +62,7 @@ export default function Command() {
   const [needsInput, setNeedsInput] = useState(false);
   const [analysis, setAnalysis] = useState<ProsodyAnalysis | null>(null);
   const [provider, setProvider] = useState<ProviderName>(
-    prefs.defaultAnalysisProvider || "openai",
+    pickInitialProvider(prefs),
   );
   const [isLoading, setIsLoading] = useState(true);
   const [failed, setFailed] = useState(false);
