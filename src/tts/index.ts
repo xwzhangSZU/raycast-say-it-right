@@ -2,12 +2,18 @@ import type { ProviderName } from "../llm/config";
 import { MissingKeyError, QWEN_BASE } from "../llm/config";
 import type { TtsConfig, TtsPrefs } from "./types";
 
-export function resolveTtsProvider(analysisProvider: ProviderName, prefs: TtsPrefs): ProviderName {
+export function resolveTtsProvider(
+  analysisProvider: ProviderName,
+  prefs: TtsPrefs,
+): ProviderName {
   const choice = prefs.ttsProvider || "follow-analysis";
   return choice === "follow-analysis" ? analysisProvider : choice;
 }
 
-export function resolveTtsConfig(provider: ProviderName, prefs: TtsPrefs): TtsConfig {
+export function resolveTtsConfig(
+  provider: ProviderName,
+  prefs: TtsPrefs,
+): TtsConfig {
   if (provider === "openai") {
     if (!prefs.openaiApiKey) throw new MissingKeyError("openai");
     return {

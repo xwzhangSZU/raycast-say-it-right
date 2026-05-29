@@ -28,7 +28,10 @@ const SCHEMA_HINT = `Return ONLY a JSON object (no markdown fences) with this ex
   "notes"?: string                // ONE short coaching tip
 }`;
 
-export function buildPrompt(text: string, opts: PromptOptions): { system: string; user: string } {
+export function buildPrompt(
+  text: string,
+  opts: PromptOptions,
+): { system: string; user: string } {
   const system = [
     "You are an expert English pronunciation coach specializing in General American prosody.",
     "Analyze the given English text for word stress, sentence stress, intonation (rising/falling tones per thought group), rhythm, and connected-speech linking.",

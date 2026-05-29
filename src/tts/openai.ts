@@ -15,7 +15,10 @@ export async function synthesizeOpenAI(
 ): Promise<SynthResult> {
   const res = await fetchImpl("https://api.openai.com/v1/audio/speech", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cfg.apiKey}`,
+    },
     body: JSON.stringify({
       model: cfg.model,
       voice: cfg.voice,

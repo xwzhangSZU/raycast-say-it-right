@@ -3,9 +3,24 @@ import { audioCacheKey, playAudio } from "../../src/tts/playback";
 
 describe("audioCacheKey", () => {
   it("is deterministic and sensitive to slow flag", () => {
-    const a = audioCacheKey({ text: "hi", provider: "openai", voice: "alloy", slow: false });
-    const b = audioCacheKey({ text: "hi", provider: "openai", voice: "alloy", slow: false });
-    const c = audioCacheKey({ text: "hi", provider: "openai", voice: "alloy", slow: true });
+    const a = audioCacheKey({
+      text: "hi",
+      provider: "openai",
+      voice: "alloy",
+      slow: false,
+    });
+    const b = audioCacheKey({
+      text: "hi",
+      provider: "openai",
+      voice: "alloy",
+      slow: false,
+    });
+    const c = audioCacheKey({
+      text: "hi",
+      provider: "openai",
+      voice: "alloy",
+      slow: true,
+    });
     expect(a).toBe(b);
     expect(a).not.toBe(c);
   });

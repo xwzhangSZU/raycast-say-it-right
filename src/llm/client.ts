@@ -14,7 +14,10 @@ export async function chatJSON(
 ): Promise<string> {
   const res = await fetchImpl(`${cfg.baseURL}/chat/completions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cfg.apiKey}`,
+    },
     body: JSON.stringify({
       model: cfg.model,
       messages: [
@@ -29,8 +32,11 @@ export async function chatJSON(
     const body = await res.text().catch(() => "");
     throw new ChatError(`Chat API ${res.status}: ${body.slice(0, 200)}`);
   }
-  const data = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: unknown } }[];
+  };
   const content = data?.choices?.[0]?.message?.content;
-  if (typeof content !== "string") throw new ChatError("Chat response had no text content");
+  if (typeof content !== "string")
+    throw new ChatError("Chat response had no text content");
   return content;
 }

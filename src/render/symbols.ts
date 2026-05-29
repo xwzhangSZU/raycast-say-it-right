@@ -16,10 +16,15 @@ export const SYM = {
 import type { Tone } from "../types";
 export function toneArrow(tone: Tone): string {
   switch (tone) {
-    case "rise": return SYM.RISE;
-    case "fall": return SYM.FALL;
-    case "fall-rise": return SYM.FALL_RISE;
-    case "rise-fall": return SYM.RISE_FALL;
-    case "level": return SYM.LEVEL;
+    case "rise":
+      return SYM.RISE;
+    case "fall":
+      return SYM.FALL;
+    case "fall-rise":
+      return SYM.FALL_RISE;
+    case "rise-fall":
+      return SYM.RISE_FALL;
+    case "level":
+      return SYM.LEVEL;
   }
 }
