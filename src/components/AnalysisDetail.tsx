@@ -73,6 +73,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
             shortcut={{ modifiers: ["cmd"], key: "c" }}
           />
           <Action.CopyToClipboard
+            // eslint-disable-next-line @raycast/prefer-title-case
             title="Copy IPA"
             content={analysis.ipa}
             shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
