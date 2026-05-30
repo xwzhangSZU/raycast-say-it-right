@@ -49,7 +49,7 @@ export async function chatJSON(
     const name = err instanceof Error ? err.name : "";
     if (name === "TimeoutError" || name === "AbortError") {
       throw new ChatError(
-        `Request to the model timed out after ${TIMEOUT_MS / 1000}s. Check your network, and that the Qwen Region matches your API key (Beijing for mainland-China keys, International otherwise).`,
+        `Request to the model timed out after ${TIMEOUT_MS / 1000}s. Check your network and that the provider's base URL and API key are correct.`,
       );
     }
     throw new ChatError(
