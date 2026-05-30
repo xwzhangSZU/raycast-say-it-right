@@ -67,6 +67,12 @@ export async function synthesizeQwen(
         `Qwen TTS audio download network error: ${String(err).slice(0, 150)}`,
       );
     }
+    if (!a.ok) {
+      const errBody = await a.text().catch(() => "");
+      throw new TtsError(
+        `Qwen TTS audio download ${a.status}: ${errBody.slice(0, 150)}`,
+      );
+    }
     return { bytes: Buffer.from(await a.arrayBuffer()), ext: "wav" };
   }
   throw new TtsError("Qwen TTS: no audio in response");
