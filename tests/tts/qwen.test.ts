@@ -70,4 +70,29 @@ describe("synthesizeQwen", () => {
     expect(init.body).toContain("qwen3-tts-instruct-flash");
     expect(init.body).toContain("speak slowly");
   });
+  it("throws a clear error when the audio URL download is non-2xx", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ output: { audio: { url: "https://x/a.wav" } } }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        text: async () => "Forbidden: url expired",
+        // A non-2xx body must NOT be treated as audio bytes.
+        arrayBuffer: async () =>
+          new TextEncoder().encode("Forbidden: url expired").buffer,
+      });
+    await expect(
+      synthesizeQwen(
+        "hi",
+        { rate: 1, instructions: "" },
+        cfg,
+        fetchImpl as unknown as typeof fetch,
+      ),
+    ).rejects.toThrow(/audio download 403/);
+  });
 });
