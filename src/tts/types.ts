@@ -1,7 +1,7 @@
-import type { ProviderName, RawPrefs } from "../llm/config";
+import type { TtsProviderName, RawPrefs } from "../llm/config";
 
 export interface TtsConfig {
-  provider: ProviderName;
+  provider: TtsProviderName;
   apiKey: string;
   voice: string;
   model: string;
@@ -16,7 +16,8 @@ export interface SynthesizeOptions {
 export interface TtsPrefs extends RawPrefs {
   openaiTtsVoice?: string;
   qwenTtsVoice?: string;
-  ttsProvider?: "follow-analysis" | "openai" | "qwen";
+  mimoTtsVoice?: string;
+  ttsProvider?: "follow-analysis" | "openai" | "qwen" | "mimo";
   loopCount?: string;
   loopGap?: string;
 }

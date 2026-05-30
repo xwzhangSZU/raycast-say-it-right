@@ -32,6 +32,15 @@ describe("chatJSON", () => {
     );
     expect(init.body).toContain('"json_object"');
   });
+  it("sends the raw key under a custom authHeader (MiMo api-key)", async () => {
+    const f = mockFetch(200, { choices: [{ message: { content: "{}" } }] });
+    await chatJSON({ ...cfg, authHeader: "api-key" }, "s", "u", f);
+    const headers = (
+      f as unknown as { mock: { calls: [string, RequestInit][] } }
+    ).mock.calls[0][1].headers as Record<string, string>;
+    expect(headers["api-key"]).toBe("sk-x");
+    expect(headers.Authorization).toBeUndefined();
+  });
   it("throws ChatError on non-2xx", async () => {
     const f = mockFetch(401, { error: "bad key" });
     await expect(chatJSON(cfg, "s", "u", f)).rejects.toBeInstanceOf(ChatError);

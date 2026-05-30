@@ -3,6 +3,9 @@ export interface ChatConfig {
   apiKey: string;
   model: string;
   extraBody?: Record<string, unknown>; // provider-specific extra body fields (e.g. Qwen enable_thinking)
+  /** Header that carries the API key. Default sends `Authorization: Bearer <key>`;
+   * set e.g. "api-key" to send the raw key under that header (MiMo). */
+  authHeader?: string;
 }
 
 export class ChatError extends Error {}
@@ -15,6 +18,9 @@ export async function chatJSON(
   user: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<string> {
+  const authHeaders: Record<string, string> = cfg.authHeader
+    ? { [cfg.authHeader]: cfg.apiKey }
+    : { Authorization: `Bearer ${cfg.apiKey}` };
   const request = (useJsonFormat: boolean) => {
     const body: Record<string, unknown> = {
       model: cfg.model,
@@ -22,16 +28,13 @@ export async function chatJSON(
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      temperature: 0.2,
+      temperature: 0, // analysis is not creative — keep it deterministic across runs
       ...(cfg.extraBody ?? {}),
     };
     if (useJsonFormat) body.response_format = { type: "json_object" };
     return fetchImpl(`${cfg.baseURL}/chat/completions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
-      },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
