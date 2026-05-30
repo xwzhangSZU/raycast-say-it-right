@@ -1,23 +1,26 @@
 import { showToast, Toast } from "@raycast/api";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { ProsodyAnalysis } from "./types";
 import type { ProviderName } from "./llm/config";
-import { resolveAnalysisConfig, pickInitialProvider } from "./llm/config";
+import { pickInitialProvider } from "./llm/config";
 import { analyze } from "./llm/analyze";
-import { isSingleWord } from "./lib/detect";
+import { performAnalysis, type AnalysisIo } from "./llm/performAnalysis";
 import { splitSentences } from "./lib/sentences";
 import { getPrefs } from "./lib/preferences";
 import { reportError } from "./lib/errors";
-import {
-  analysisCacheKey,
-  readAnalysisCache,
-  writeAnalysisCache,
-} from "./lib/cache";
+import { readAnalysisCache, writeAnalysisCache } from "./lib/cache";
 import {
   AnalysisDetail,
   AnalysisPlaceholder,
 } from "./components/AnalysisDetail";
 import { speak, speakLoop, exportAudio, repeatLast } from "./tts/speak";
+
+const ANALYSIS_IO: AnalysisIo = {
+  analyze,
+  readCache: readAnalysisCache,
+  writeCache: writeAnalysisCache,
+  reportError,
+};
 
 export function AnalyzeView({ text }: { text: string }) {
   const prefs = useMemo(() => getPrefs(), []);
@@ -33,29 +36,20 @@ export function AnalyzeView({ text }: { text: string }) {
   const [analysis, setAnalysis] = useState<ProsodyAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  // Monotonic request id: only the latest in-flight analysis may mutate state,
+  // so switching provider/sentence mid-flight can't let a stale result win.
+  const genRef = useRef(0);
 
   const run = useCallback(
     async (input: string, prov: ProviderName, forceFresh = false) => {
-      setIsLoading(true);
-      setFailed(false);
-      try {
-        const isWord = isSingleWord(input);
-        const key = analysisCacheKey(input, prov, "GA");
-        const cached = forceFresh ? null : readAnalysisCache(key);
-        if (cached) {
-          setAnalysis(cached);
-        } else {
-          const cfg = resolveAnalysisConfig(prov, prefs);
-          const result = await analyze(input, { isWord, accent: "GA" }, cfg);
-          writeAnalysisCache(key, result);
-          setAnalysis(result);
-        }
-      } catch (err) {
-        setFailed(true);
-        await reportError(err);
-      } finally {
-        setIsLoading(false);
-      }
+      const myGen = ++genRef.current;
+      await performAnalysis(input, prov, {
+        prefs,
+        forceFresh,
+        isCurrent: () => myGen === genRef.current,
+        sinks: { setLoading: setIsLoading, setFailed, setAnalysis },
+        io: ANALYSIS_IO,
+      });
     },
     [prefs],
   );
