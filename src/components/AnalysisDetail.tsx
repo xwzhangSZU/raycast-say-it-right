@@ -1,6 +1,6 @@
 import { Detail, ActionPanel, Action, Icon } from "@raycast/api";
 import type { ProsodyAnalysis } from "../types";
-import type { ProviderName } from "../llm/config";
+import { PROVIDER_LABELS, type ProviderName } from "../llm/config";
 import { renderAnalysis } from "../render/markdown";
 
 export function AnalysisPlaceholder(props: {
@@ -44,6 +44,8 @@ export interface AnalysisDetailProps {
   onRepeat: () => void;
   onSave: () => void;
   onSwitchProvider: () => void;
+  /** Label of the next provider in the cycle; omit to hide the switch action. */
+  switchToLabel?: string;
   onNewExample?: () => void;
   onNext?: () => void;
   onPrev?: () => void;
@@ -51,13 +53,23 @@ export interface AnalysisDetailProps {
 
 export function AnalysisDetail(props: AnalysisDetailProps) {
   const { analysis, provider, isLoading, sentenceIndex, sentenceTotal } = props;
-  const markdown = renderAnalysis(analysis);
-  const other: ProviderName = provider === "openai" ? "qwen" : "openai";
-  const providerLabel = provider === "openai" ? "OpenAI" : "Qwen";
-  const otherLabel = other === "openai" ? "OpenAI" : "Qwen";
+  // When the input has multiple sentences, surface position + how to move on
+  // screen. Without this, sentence stepping is invisible (buried in ⌘K) and
+  // users get stuck replaying sentence 1.
+  const navHint =
+    sentenceTotal > 1
+      ? `\n\n---\n\n**Sentence ${sentenceIndex + 1} of ${sentenceTotal}** — \`⌘]\` next · \`⌘[\` previous · \`⌘K\` for all actions`
+      : "";
+  const markdown = renderAnalysis(analysis) + navHint;
+  const providerLabel = PROVIDER_LABELS[provider];
   return (
     <Detail
       isLoading={isLoading}
+      navigationTitle={
+        sentenceTotal > 1
+          ? `Sentence ${sentenceIndex + 1} / ${sentenceTotal}`
+          : undefined
+      }
       markdown={markdown}
       metadata={
         <Detail.Metadata>
@@ -112,7 +124,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
                 <Action
                   title="Next Sentence"
                   icon={Icon.ArrowRight}
-                  shortcut={{ modifiers: ["cmd", "shift"], key: "n" }}
+                  shortcut={{ modifiers: ["cmd"], key: "]" }}
                   onAction={props.onNext}
                 />
               ) : null}
@@ -120,7 +132,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
                 <Action
                   title="Previous Sentence"
                   icon={Icon.ArrowLeft}
-                  shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+                  shortcut={{ modifiers: ["cmd"], key: "[" }}
                   onAction={props.onPrev}
                 />
               ) : null}
@@ -133,12 +145,14 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
               shortcut={{ modifiers: ["cmd", "shift"], key: "e" }}
               onAction={props.onSave}
             />
-            <Action
-              title={`Switch to ${otherLabel}`}
-              icon={Icon.Switch}
-              shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
-              onAction={props.onSwitchProvider}
-            />
+            {props.switchToLabel ? (
+              <Action
+                title={`Switch to ${props.switchToLabel}`}
+                icon={Icon.Switch}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
+                onAction={props.onSwitchProvider}
+              />
+            ) : null}
             {props.onNewExample ? (
               <Action
                 title="New Example Sentence"

@@ -1,8 +1,11 @@
 import { showToast, Toast } from "@raycast/api";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { ProsodyAnalysis } from "./types";
-import type { ProviderName } from "./llm/config";
-import { pickInitialProvider } from "./llm/config";
+import {
+  pickInitialProvider,
+  PROVIDER_LABELS,
+  type ProviderName,
+} from "./llm/config";
 import { analyze } from "./llm/analyze";
 import { performAnalysis, type AnalysisIo } from "./llm/performAnalysis";
 import { splitSentences } from "./lib/sentences";
@@ -33,6 +36,17 @@ export function AnalyzeView({ text }: { text: string }) {
   const [provider, setProvider] = useState<ProviderName>(
     pickInitialProvider(prefs),
   );
+  // Providers the user has actually configured (a key is set). The switch
+  // action cycles through these; falls back to all three if none configured.
+  const availableProviders = useMemo<ProviderName[]>(() => {
+    const list: ProviderName[] = [];
+    if (prefs.openaiApiKey?.trim()) list.push("openai");
+    if (prefs.qwenApiKey?.trim() || prefs.qwenAnalysisApiKey?.trim())
+      list.push("qwen");
+    if (prefs.geminiApiKey?.trim()) list.push("gemini");
+    if (prefs.mimoApiKey?.trim()) list.push("mimo");
+    return list.length > 0 ? list : ["openai", "qwen", "gemini", "mimo"];
+  }, [prefs]);
   const [analysis, setAnalysis] = useState<ProsodyAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -123,8 +137,17 @@ export function AnalyzeView({ text }: { text: string }) {
   }, [current, provider, prefs]);
 
   const onSwitchProvider = useCallback(() => {
-    setProvider((p) => (p === "openai" ? "qwen" : "openai"));
-  }, []);
+    setProvider((p) => {
+      const i = availableProviders.indexOf(p);
+      return availableProviders[(i + 1) % availableProviders.length];
+    });
+  }, [availableProviders]);
+  const nextProvider =
+    availableProviders.length > 1
+      ? availableProviders[
+          (availableProviders.indexOf(provider) + 1) % availableProviders.length
+        ]
+      : undefined;
 
   const onNewExample = useCallback(() => {
     void run(current, provider, true);
@@ -159,6 +182,7 @@ export function AnalyzeView({ text }: { text: string }) {
       onRepeat={onRepeat}
       onSave={onSave}
       onSwitchProvider={onSwitchProvider}
+      switchToLabel={nextProvider ? PROVIDER_LABELS[nextProvider] : undefined}
       onNewExample={analysis.isGeneratedExample ? onNewExample : undefined}
       onNext={sentences.length > 1 ? onNext : undefined}
       onPrev={sentences.length > 1 ? onPrev : undefined}

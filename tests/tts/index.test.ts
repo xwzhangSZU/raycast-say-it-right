@@ -14,6 +14,12 @@ describe("resolveTtsProvider", () => {
       "openai",
     );
   });
+  it("lets mimo speak when following the analysis provider", () => {
+    expect(resolveTtsProvider("mimo", {})).toBe("mimo");
+  });
+  it("falls back off gemini (no TTS) to a configured TTS provider", () => {
+    expect(resolveTtsProvider("gemini", { qwenApiKey: "sk" })).toBe("qwen");
+  });
 });
 
 describe("resolveTtsConfig", () => {
@@ -32,6 +38,12 @@ describe("resolveTtsConfig", () => {
     });
     expect(c.baseURL).toBe("https://dashscope.aliyuncs.com/api/v1");
     expect(c.model).toBe("qwen3-tts-flash");
+  });
+  it("builds MiMo TTS config (mimo-v2.5-tts, default Chloe voice)", () => {
+    const c = resolveTtsConfig("mimo", { mimoApiKey: "tp", mimoTtsVoice: "Milo" });
+    expect(c.model).toBe("mimo-v2.5-tts");
+    expect(c.voice).toBe("Milo");
+    expect(c.baseURL).toBe("https://api.xiaomimimo.com/v1");
   });
 });
 

@@ -7,6 +7,7 @@ import {
 } from "./index";
 import { synthesizeOpenAI } from "./openai";
 import { synthesizeQwen } from "./qwen";
+import { synthesizeMimo } from "./mimo";
 import {
   audioCacheKey,
   cachedAudioPath,
@@ -33,7 +34,9 @@ async function synthCached(
     const result =
       provider === "openai"
         ? await synthesizeOpenAI(text, opts, cfg)
-        : await synthesizeQwen(text, opts, cfg);
+        : provider === "mimo"
+          ? await synthesizeMimo(text, opts, cfg)
+          : await synthesizeQwen(text, opts, cfg);
     path = await writeAudioCache(key, result.ext, result.bytes);
   }
   return path;
