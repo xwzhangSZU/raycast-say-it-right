@@ -23,14 +23,25 @@ export function resolveTtsProvider(
 ): TtsProviderName {
   const choice = prefs.ttsProvider || "follow-analysis";
   if (choice !== "follow-analysis") return choice;
-  if ((TTS_PROVIDER_IDS as readonly string[]).includes(analysisProvider))
+  const available = getAvailableTtsProviders(prefs);
+  if (
+    (TTS_PROVIDER_IDS as readonly string[]).includes(analysisProvider) &&
+    available.includes(analysisProvider as TtsProviderName)
+  ) {
     return analysisProvider;
-  if (prefs.qwenApiKey?.trim()) return "qwen";
-  if (prefs.minimaxApiKey?.trim()) return "minimax";
-  if (prefs.mimoApiKey?.trim()) return "mimo";
-  if (prefs.geminiApiKey?.trim()) return "gemini";
-  if (prefs.openaiApiKey?.trim()) return "openai";
+  }
+  if (available.length > 0) return available[0];
   return "qwen"; // none set → resolveTtsConfig throws a clear MissingKeyError
+}
+
+export function getAvailableTtsProviders(prefs: TtsPrefs): TtsProviderName[] {
+  return TTS_PROVIDER_IDS.filter((provider) => {
+    if (provider === "qwen") return Boolean(prefs.qwenApiKey?.trim());
+    if (provider === "minimax") return Boolean(prefs.minimaxApiKey?.trim());
+    if (provider === "mimo") return Boolean(prefs.mimoApiKey?.trim());
+    if (provider === "gemini") return Boolean(prefs.geminiApiKey?.trim());
+    return Boolean(prefs.openaiApiKey?.trim());
+  });
 }
 
 export function resolveTtsConfig(

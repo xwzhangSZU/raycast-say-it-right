@@ -49,12 +49,46 @@
   "preferences": [
     {
       "name": "defaultAnalysisProvider",
-      "title": "Analysis Provider",
-      "description": "Preferred provider when multiple analysis keys are set. If only one analysis key is filled, that provider is used automatically.",
+      "title": "Default Analysis Provider",
+      "description": "Initial provider for analysis and translation. You can change provider and model per run from the Action Panel.",
       "type": "dropdown",
       "required": false,
       "default": "qwen",
       "data": [
+        {
+          "title": "Qwen",
+          "value": "qwen"
+        },
+        {
+          "title": "MiniMax",
+          "value": "minimax"
+        },
+        {
+          "title": "MiMo",
+          "value": "mimo"
+        },
+        {
+          "title": "Gemini",
+          "value": "gemini"
+        },
+        {
+          "title": "OpenAI",
+          "value": "openai"
+        }
+      ]
+    },
+    {
+      "name": "ttsProvider",
+      "title": "Default TTS Provider",
+      "description": "Initial provider for model audio. Follow Analysis Provider uses the analysis provider when its TTS key is set, otherwise the first configured TTS provider.",
+      "type": "dropdown",
+      "required": false,
+      "default": "follow-analysis",
+      "data": [
+        {
+          "title": "Follow Analysis Provider",
+          "value": "follow-analysis"
+        },
         {
           "title": "Qwen",
           "value": "qwen"
@@ -83,34 +117,6 @@
       "description": "Used for OpenAI analysis and TTS.",
       "type": "password",
       "required": false
-    },
-    {
-      "name": "openaiAnalysisModel",
-      "title": "OpenAI Analysis Model",
-      "description": "OpenAI model used for pronunciation analysis.",
-      "type": "dropdown",
-      "required": false,
-      "default": "gpt-5.5",
-      "data": [
-        {
-          "title": "GPT-5.5",
-          "value": "gpt-5.5"
-        }
-      ]
-    },
-    {
-      "name": "openaiTtsModel",
-      "title": "OpenAI TTS Model",
-      "description": "OpenAI model used for read-aloud.",
-      "type": "dropdown",
-      "required": false,
-      "default": "gpt-4o-mini-tts",
-      "data": [
-        {
-          "title": "GPT-4o Mini TTS",
-          "value": "gpt-4o-mini-tts"
-        }
-      ]
     },
     {
       "name": "openaiTtsVoice",
@@ -312,20 +318,6 @@
       "default": "https://api.minimaxi.com/anthropic"
     },
     {
-      "name": "minimaxAnalysisModel",
-      "title": "MiniMax Analysis Model",
-      "description": "MiniMax model used for pronunciation analysis.",
-      "type": "dropdown",
-      "required": false,
-      "default": "MiniMax-M2.7-highspeed",
-      "data": [
-        {
-          "title": "M2.7 High-Speed",
-          "value": "MiniMax-M2.7-highspeed"
-        }
-      ]
-    },
-    {
       "name": "minimaxTtsBaseURL",
       "title": "MiniMax TTS Base URL",
       "description": "MiniMax TTS base URL.",
@@ -389,34 +381,6 @@
       "required": false
     },
     {
-      "name": "geminiAnalysisModel",
-      "title": "Gemini Analysis Model",
-      "description": "Gemini model used for pronunciation analysis.",
-      "type": "dropdown",
-      "required": false,
-      "default": "gemini-3.5-flash",
-      "data": [
-        {
-          "title": "Gemini 3.5 Flash",
-          "value": "gemini-3.5-flash"
-        }
-      ]
-    },
-    {
-      "name": "geminiTtsModel",
-      "title": "Gemini TTS Model",
-      "description": "Gemini TTS model used for read-aloud.",
-      "type": "dropdown",
-      "required": false,
-      "default": "gemini-3.1-flash-tts-preview",
-      "data": [
-        {
-          "title": "Gemini 3.1 Flash TTS Preview",
-          "value": "gemini-3.1-flash-tts-preview"
-        }
-      ]
-    },
-    {
       "name": "geminiTtsVoice",
       "title": "Gemini TTS Voice",
       "description": "Voice for Gemini TTS.",
@@ -476,20 +440,6 @@
       ]
     },
     {
-      "name": "mimoTtsModel",
-      "title": "MiMo TTS Model",
-      "description": "MiMo TTS model used for read-aloud.",
-      "type": "dropdown",
-      "required": false,
-      "default": "mimo-v2.5-tts",
-      "data": [
-        {
-          "title": "MiMo V2.5 TTS",
-          "value": "mimo-v2.5-tts"
-        }
-      ]
-    },
-    {
       "name": "mimoTtsVoice",
       "title": "MiMo TTS Voice",
       "description": "Voice for MiMo TTS (English voices).",
@@ -512,40 +462,6 @@
         {
           "title": "Dean — English male",
           "value": "Dean"
-        }
-      ]
-    },
-    {
-      "name": "ttsProvider",
-      "title": "TTS Provider",
-      "description": "Which provider synthesizes audio.",
-      "type": "dropdown",
-      "required": false,
-      "default": "follow-analysis",
-      "data": [
-        {
-          "title": "Follow Analysis Provider",
-          "value": "follow-analysis"
-        },
-        {
-          "title": "Qwen",
-          "value": "qwen"
-        },
-        {
-          "title": "MiniMax",
-          "value": "minimax"
-        },
-        {
-          "title": "MiMo",
-          "value": "mimo"
-        },
-        {
-          "title": "Gemini",
-          "value": "gemini"
-        },
-        {
-          "title": "OpenAI",
-          "value": "openai"
         }
       ]
     },

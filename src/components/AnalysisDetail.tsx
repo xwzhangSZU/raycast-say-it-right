@@ -1,7 +1,17 @@
 import { Detail, ActionPanel, Action, Icon } from "@raycast/api";
 import type { ProsodyAnalysis } from "../types";
-import { PROVIDER_LABELS, type ProviderName } from "../llm/config";
+import {
+  PROVIDER_LABELS,
+  type ProviderName,
+  type TtsProviderName,
+} from "../llm/config";
 import { renderAnalysis } from "../render/markdown";
+
+export interface PickerOption<T extends string = string> {
+  value: T;
+  title: string;
+  selected?: boolean;
+}
 
 export function AnalysisPlaceholder(props: {
   isLoading: boolean;
@@ -34,6 +44,10 @@ export function AnalysisPlaceholder(props: {
 export interface AnalysisDetailProps {
   items: AnalysisPageItem[];
   provider: ProviderName;
+  analysisModel: string;
+  ttsProvider: TtsProviderName;
+  ttsFollowsAnalysis: boolean;
+  ttsModel: string;
   isLoading: boolean;
   activeIndex: number;
   sentenceTotal: number;
@@ -48,6 +62,14 @@ export interface AnalysisDetailProps {
   onSwitchProvider: () => void;
   /** Label of the next provider in the cycle; omit to hide the switch action. */
   switchToLabel?: string;
+  analysisProviderOptions: PickerOption<ProviderName>[];
+  analysisModelOptions: PickerOption[];
+  ttsProviderOptions: PickerOption<"follow-analysis" | TtsProviderName>[];
+  ttsModelOptions: PickerOption[];
+  onSelectAnalysisProvider: (provider: ProviderName) => void;
+  onSelectAnalysisModel: (model: string) => void;
+  onSelectTtsProvider: (provider: "follow-analysis" | TtsProviderName) => void;
+  onSelectTtsModel: (model: string) => void;
   onRetryCurrent: () => void;
   onTranslateCurrent: () => void;
   onTranslatePage: () => void;
@@ -76,6 +98,10 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
   const {
     items,
     provider,
+    analysisModel,
+    ttsProvider,
+    ttsFollowsAnalysis,
+    ttsModel,
     isLoading,
     activeIndex,
     sentenceTotal,
@@ -85,6 +111,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
   const activeItem = items.find((item) => item.index === activeIndex);
   const markdown = renderPageMarkdown(items, activeIndex, sentenceTotal);
   const providerLabel = PROVIDER_LABELS[provider];
+  const ttsProviderLabel = PROVIDER_LABELS[ttsProvider];
   return (
     <Detail
       isLoading={isLoading}
@@ -96,7 +123,13 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
       markdown={markdown}
       metadata={
         <Detail.Metadata>
-          <Detail.Metadata.Label title="Provider" text={providerLabel} />
+          <Detail.Metadata.Label title="Analysis" text={providerLabel} />
+          <Detail.Metadata.Label title="Analysis Model" text={analysisModel} />
+          <Detail.Metadata.Label
+            title="TTS"
+            text={`${ttsProviderLabel}${ttsFollowsAnalysis ? " (auto)" : ""}`}
+          />
+          <Detail.Metadata.Label title="TTS Model" text={ttsModel} />
           <Detail.Metadata.Label title="Accent" text="General American" />
           {sentenceTotal > 1 ? (
             <Detail.Metadata.Label
@@ -147,6 +180,66 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
               shortcut={{ modifiers: ["cmd"], key: "r" }}
               onAction={props.onRepeat}
             />
+          </ActionPanel.Section>
+          <ActionPanel.Section title="Provider & Models">
+            <ActionPanel.Submenu
+              title="Choose Analysis Provider"
+              icon={Icon.Switch}
+            >
+              {props.analysisProviderOptions.map((option) => (
+                <Action
+                  key={option.value}
+                  title={option.title}
+                  icon={option.selected ? Icon.CheckCircle : Icon.Circle}
+                  onAction={() => props.onSelectAnalysisProvider(option.value)}
+                />
+              ))}
+            </ActionPanel.Submenu>
+            {props.analysisModelOptions.length > 1 ? (
+              <ActionPanel.Submenu
+                title="Choose Analysis Model"
+                icon={Icon.Text}
+              >
+                {props.analysisModelOptions.map((option) => (
+                  <Action
+                    key={option.value}
+                    title={option.title}
+                    icon={option.selected ? Icon.CheckCircle : Icon.Circle}
+                    onAction={() => props.onSelectAnalysisModel(option.value)}
+                  />
+                ))}
+              </ActionPanel.Submenu>
+            ) : null}
+            <ActionPanel.Submenu title="Choose Voice Provider" icon={Icon.Play}>
+              {props.ttsProviderOptions.map((option) => (
+                <Action
+                  key={option.value}
+                  title={option.title}
+                  icon={option.selected ? Icon.CheckCircle : Icon.Circle}
+                  onAction={() => props.onSelectTtsProvider(option.value)}
+                />
+              ))}
+            </ActionPanel.Submenu>
+            {props.ttsModelOptions.length > 1 ? (
+              <ActionPanel.Submenu title="Choose Voice Model" icon={Icon.Gauge}>
+                {props.ttsModelOptions.map((option) => (
+                  <Action
+                    key={option.value}
+                    title={option.title}
+                    icon={option.selected ? Icon.CheckCircle : Icon.Circle}
+                    onAction={() => props.onSelectTtsModel(option.value)}
+                  />
+                ))}
+              </ActionPanel.Submenu>
+            ) : null}
+            {props.switchToLabel ? (
+              <Action
+                title={`Switch Analysis Provider to ${props.switchToLabel}`}
+                icon={Icon.Switch}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
+                onAction={props.onSwitchProvider}
+              />
+            ) : null}
           </ActionPanel.Section>
           {props.onNextSentence ||
           props.onPrevSentence ||
@@ -208,14 +301,6 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
               shortcut={{ modifiers: ["cmd", "shift"], key: "e" }}
               onAction={props.onSave}
             />
-            {props.switchToLabel ? (
-              <Action
-                title={`Switch to ${props.switchToLabel}`}
-                icon={Icon.Switch}
-                shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
-                onAction={props.onSwitchProvider}
-              />
-            ) : null}
             <Action
               title="Refresh Current Analysis"
               icon={Icon.ArrowClockwise}

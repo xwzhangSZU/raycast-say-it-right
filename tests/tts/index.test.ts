@@ -16,13 +16,20 @@ describe("resolveTtsProvider", () => {
     );
   });
   it("lets mimo speak when following the analysis provider", () => {
-    expect(resolveTtsProvider("mimo", {})).toBe("mimo");
+    expect(resolveTtsProvider("mimo", { mimoApiKey: "tp" })).toBe("mimo");
   });
   it("lets gemini speak when following the analysis provider", () => {
-    expect(resolveTtsProvider("gemini", {})).toBe("gemini");
+    expect(resolveTtsProvider("gemini", { geminiApiKey: "sk" })).toBe("gemini");
   });
   it("lets minimax speak when following the analysis provider", () => {
-    expect(resolveTtsProvider("minimax", {})).toBe("minimax");
+    expect(resolveTtsProvider("minimax", { minimaxApiKey: "sk-mm" })).toBe(
+      "minimax",
+    );
+  });
+  it("falls back to a configured TTS provider when follow-analysis lacks a TTS key", () => {
+    expect(resolveTtsProvider("qwen", { openaiApiKey: "sk-openai" })).toBe(
+      "openai",
+    );
   });
 });
 
@@ -63,7 +70,10 @@ describe("resolveTtsConfig", () => {
     expect(c.baseURL).toBe("https://api.minimaxi.com/v1");
   });
   it("builds MiMo TTS config (mimo-v2.5-tts, default Chloe voice)", () => {
-    const c = resolveTtsConfig("mimo", { mimoApiKey: "tp", mimoTtsVoice: "Milo" });
+    const c = resolveTtsConfig("mimo", {
+      mimoApiKey: "tp",
+      mimoTtsVoice: "Milo",
+    });
     expect(c.model).toBe("mimo-v2.5-tts");
     expect(c.voice).toBe("Milo");
     expect(c.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
