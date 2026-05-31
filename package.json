@@ -23,6 +23,13 @@
       "subtitle": "Say It Right",
       "description": "Type or paste an English sentence to see how to say it.",
       "mode": "view"
+    },
+    {
+      "name": "translate-selection",
+      "title": "Translate Selection",
+      "subtitle": "Say It Right",
+      "description": "Translate selected or pasted text with the configured provider.",
+      "mode": "view"
     }
   ],
   "preferences": [

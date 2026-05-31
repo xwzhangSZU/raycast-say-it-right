@@ -82,6 +82,8 @@ declare namespace Preferences {
   export type AnalyzeSelection = ExtensionPreferences & {}
   /** Preferences accessible in the `practice-sentence` command */
   export type PracticeSentence = ExtensionPreferences & {}
+  /** Preferences accessible in the `translate-selection` command */
+  export type TranslateSelection = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -89,5 +91,7 @@ declare namespace Arguments {
   export type AnalyzeSelection = {}
   /** Arguments passed to the `practice-sentence` command */
   export type PracticeSentence = {}
+  /** Arguments passed to the `translate-selection` command */
+  export type TranslateSelection = {}
 }
 
