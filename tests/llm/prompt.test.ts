@@ -26,6 +26,14 @@ describe("parseAnalysis", () => {
     const out = parseAnalysis("```json\n" + JSON.stringify(EXAMPLE) + "\n```");
     expect(out.thoughtGroups.length).toBe(2);
   });
+  it("extracts JSON from prose or fenced output with trailing text", () => {
+    const out = parseAnalysis(
+      "Here is the analysis:\n```json\n" +
+        JSON.stringify(EXAMPLE) +
+        "\n```\nHope this helps.",
+    );
+    expect(out.text).toBe(EXAMPLE.text);
+  });
   it("throws on schema-invalid JSON", () => {
     expect(() => parseAnalysis(JSON.stringify({ text: "x" }))).toThrow();
   });
