@@ -45,7 +45,7 @@ The coaching commands open the same practice view, with every action available i
 
 Open the extension's preferences and add **at least one** API key:
 
-- **Qwen Token Plan + DashScope** — analysis (`qwen3.6-flash`, `qwen3.6-plus`) uses the Token Plan base URL (`https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` by default). Speech (`qwen3-tts-flash`, `qwen3-tts-instruct-flash`) uses a separate DashScope key and region.
+- **Qwen Token Plan + DashScope** — analysis (`qwen3.6-flash`, `qwen3.6-plus`) uses the Token Plan Anthropic base URL (`https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic` by default). Speech (`qwen3-tts-flash`, `qwen3-tts-instruct-flash`) uses a separate DashScope key and region.
 - **MiniMax** — analysis (`MiniMax-M2.7-highspeed`) through the Token Plan Anthropic endpoint (`https://api.minimaxi.com/anthropic`) and speech (`speech-2.8-turbo`, `speech-2.8-hd`).
 - **MiMo / Xiaomi** — analysis (`mimo-v2.5`, `mimo-v2.5-pro`) and speech (`mimo-v2.5-tts`).
 - **Gemini** — analysis (`gemini-3.5-flash`) and speech (`gemini-3.1-flash-tts-preview`).

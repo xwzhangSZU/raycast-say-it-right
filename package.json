@@ -206,10 +206,10 @@
     {
       "name": "qwenAnalysisBaseURL",
       "title": "Qwen Analysis Base URL",
-      "description": "Qwen Token Plan base URL for analysis. Default is OpenAI-compatible; /apps/anthropic is also supported. TTS uses DashScope separately.",
+      "description": "Qwen Token Plan base URL for analysis. Default is Anthropic-compatible; OpenAI-compatible /compatible-mode/v1 is also supported. TTS uses DashScope separately.",
       "type": "textfield",
       "required": false,
-      "default": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+      "default": "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic"
     },
     {
       "name": "qwenAnalysisApiKey",

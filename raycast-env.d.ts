@@ -24,7 +24,7 @@ type ExtensionPreferences = {
   "qwenRegion": "beijing" | "intl",
   /** Qwen Analysis Model - Qwen chat model used for analysis. */
   "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.6-plus",
-  /** Qwen Analysis Base URL - Qwen Token Plan base URL for analysis. Default is OpenAI-compatible; /apps/anthropic is also supported. TTS uses DashScope separately. */
+  /** Qwen Analysis Base URL - Qwen Token Plan base URL for analysis. Default is Anthropic-compatible; OpenAI-compatible /compatible-mode/v1 is also supported. TTS uses DashScope separately. */
   "qwenAnalysisBaseURL": string,
   /** Qwen Token Plan API Key - Used only for Qwen analysis. Does not affect Qwen-TTS. */
   "qwenAnalysisApiKey"?: string,

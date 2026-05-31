@@ -182,7 +182,7 @@ export function resolveAnalysisConfig(
   // Qwen analysis always uses Token Plan. DashScope is reserved for Qwen-TTS.
   const analysisKey = prefs.qwenAnalysisApiKey?.trim();
   if (!analysisKey) throw new MissingKeyError("qwen");
-  const qwenBaseURL = prefs.qwenAnalysisBaseURL?.trim() || QWEN_BASE.compatible;
+  const qwenBaseURL = prefs.qwenAnalysisBaseURL?.trim() || QWEN_BASE.anthropic;
   const qwenAnthropic = isAnthropicCompatibleBaseURL(qwenBaseURL);
   return {
     baseURL: qwenBaseURL,
