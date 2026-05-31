@@ -49,6 +49,26 @@ describe("resolveAnalysisConfig", () => {
     const openai = resolveAnalysisConfig("openai", { openaiApiKey: "sk" });
     expect(openai.extraBody).toBeUndefined();
   });
+  it("trims configured API keys before use", () => {
+    expect(
+      resolveAnalysisConfig("openai", { openaiApiKey: " sk-openai " }).apiKey,
+    ).toBe("sk-openai");
+    expect(
+      resolveAnalysisConfig("gemini", { geminiApiKey: " sk-gemini " }).apiKey,
+    ).toBe("sk-gemini");
+    expect(
+      resolveAnalysisConfig("mimo", { mimoApiKey: " tp-mimo " }).apiKey,
+    ).toBe("tp-mimo");
+    expect(
+      resolveAnalysisConfig("qwen", { qwenApiKey: " sk-qwen " }).apiKey,
+    ).toBe("sk-qwen");
+    expect(
+      resolveAnalysisConfig("qwen", {
+        qwenApiKey: " sk-regular ",
+        qwenAnalysisApiKey: " sk-sp ",
+      }).apiKey,
+    ).toBe("sk-sp");
+  });
   it("builds Gemini config on its OpenAI-compatible endpoint", () => {
     const c = resolveAnalysisConfig("gemini", { geminiApiKey: "sk" });
     expect(c.baseURL).toBe(GEMINI_BASE);
@@ -76,8 +96,26 @@ describe("resolveAnalysisConfig", () => {
   });
   it("throws MissingKeyError when key absent", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);
+    expect(() => resolveAnalysisConfig("qwen", {})).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("gemini", {})).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("mimo", {})).toThrow(MissingKeyError);
+  });
+  it("throws MissingKeyError for whitespace-only keys", () => {
+    expect(() =>
+      resolveAnalysisConfig("openai", { openaiApiKey: "  " }),
+    ).toThrow(MissingKeyError);
+    expect(() =>
+      resolveAnalysisConfig("qwen", {
+        qwenApiKey: "  ",
+        qwenAnalysisApiKey: "  ",
+      }),
+    ).toThrow(MissingKeyError);
+    expect(() =>
+      resolveAnalysisConfig("gemini", { geminiApiKey: "  " }),
+    ).toThrow(MissingKeyError);
+    expect(() => resolveAnalysisConfig("mimo", { mimoApiKey: "  " })).toThrow(
+      MissingKeyError,
+    );
   });
 });
 
@@ -87,11 +125,21 @@ describe("pickInitialProvider", () => {
     expect(pickInitialProvider({ qwenApiKey: "sk" })).toBe("qwen");
   });
   it("falls back to the preferred provider when both keys are set", () => {
-    expect(pickInitialProvider({ openaiApiKey: "a", qwenApiKey: "b", defaultAnalysisProvider: "qwen" })).toBe("qwen");
-    expect(pickInitialProvider({ openaiApiKey: "a", qwenApiKey: "b" })).toBe("openai");
+    expect(
+      pickInitialProvider({
+        openaiApiKey: "a",
+        qwenApiKey: "b",
+        defaultAnalysisProvider: "qwen",
+      }),
+    ).toBe("qwen");
+    expect(pickInitialProvider({ openaiApiKey: "a", qwenApiKey: "b" })).toBe(
+      "openai",
+    );
   });
   it("ignores blank/whitespace keys", () => {
-    expect(pickInitialProvider({ openaiApiKey: "  ", qwenApiKey: "sk" })).toBe("qwen");
+    expect(pickInitialProvider({ openaiApiKey: "  ", qwenApiKey: "sk" })).toBe(
+      "qwen",
+    );
   });
   it("supports gemini as the sole or preferred provider", () => {
     expect(pickInitialProvider({ geminiApiKey: "sk" })).toBe("gemini");
