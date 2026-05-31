@@ -9,6 +9,7 @@ import {
 import { analyze } from "./llm/analyze";
 import { performAnalysis, type AnalysisIo } from "./llm/performAnalysis";
 import { splitSentences } from "./lib/sentences";
+import { resolveLoop } from "./lib/loop";
 import { getPrefs } from "./lib/preferences";
 import { reportError } from "./lib/errors";
 import { readAnalysisCache, writeAnalysisCache } from "./lib/cache";
@@ -92,8 +93,7 @@ export function AnalyzeView({ text }: { text: string }) {
   );
 
   const onLoop = useCallback(() => {
-    const times = Number(prefs.loopCount) || 3;
-    const gapMs = (Number(prefs.loopGap) || 1) * 1000;
+    const { times, gapMs } = resolveLoop(prefs.loopCount, prefs.loopGap);
     void (async () => {
       const toast = await showToast({
         style: Toast.Style.Animated,

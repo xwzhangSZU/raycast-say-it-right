@@ -24,6 +24,9 @@ export const WordSchema = z
   .refine((w) => !w.nuclear || w.stressed, {
     message: "A nuclear word must also be stressed",
   })
+  .refine((w) => !w.stressed || w.stressIndex !== null, {
+    message: "A stressed word must have a non-null stressIndex",
+  })
   .refine((w) => w.stressIndex === null || w.stressIndex < w.syllables.length, {
     message: "stressIndex must be a valid syllable index",
   });
