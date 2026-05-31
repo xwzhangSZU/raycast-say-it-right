@@ -75,26 +75,29 @@ export function resolveAnalysisConfig(
   prefs: RawPrefs,
 ): ChatConfig {
   if (provider === "openai") {
-    if (!prefs.openaiApiKey) throw new MissingKeyError("openai");
+    const key = prefs.openaiApiKey?.trim();
+    if (!key) throw new MissingKeyError("openai");
     return {
       baseURL: "https://api.openai.com/v1",
-      apiKey: prefs.openaiApiKey,
+      apiKey: key,
       model: prefs.openaiAnalysisModel || "gpt-4o-mini",
     };
   }
   if (provider === "gemini") {
-    if (!prefs.geminiApiKey) throw new MissingKeyError("gemini");
+    const key = prefs.geminiApiKey?.trim();
+    if (!key) throw new MissingKeyError("gemini");
     return {
       baseURL: GEMINI_BASE,
-      apiKey: prefs.geminiApiKey,
+      apiKey: key,
       model: prefs.geminiAnalysisModel || "gemini-3.5-flash",
     };
   }
   if (provider === "mimo") {
-    if (!prefs.mimoApiKey) throw new MissingKeyError("mimo");
+    const key = prefs.mimoApiKey?.trim();
+    if (!key) throw new MissingKeyError("mimo");
     return {
       baseURL: prefs.mimoBaseURL?.trim() || MIMO_BASE,
-      apiKey: prefs.mimoApiKey,
+      apiKey: key,
       model: prefs.mimoAnalysisModel || "mimo-v2.5",
       authHeader: "api-key", // MiMo authenticates via `api-key`, not Bearer
       // MiMo-V2.5 uses a Qwen3-style reasoning parser; disable thinking for
@@ -105,7 +108,8 @@ export function resolveAnalysisConfig(
   // Qwen: analysis may use a separate endpoint + key (e.g. Token Plan);
   // falls back to the standard DashScope endpoint + qwenApiKey.
   const region = prefs.qwenRegion === "intl" ? "intl" : "beijing";
-  const analysisKey = prefs.qwenAnalysisApiKey?.trim() || prefs.qwenApiKey;
+  const analysisKey =
+    prefs.qwenAnalysisApiKey?.trim() || prefs.qwenApiKey?.trim();
   if (!analysisKey) throw new MissingKeyError("qwen");
   return {
     baseURL: prefs.qwenAnalysisBaseURL?.trim() || QWEN_BASE[region],
