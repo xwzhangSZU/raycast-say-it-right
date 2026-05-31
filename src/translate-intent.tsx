@@ -23,7 +23,7 @@ export default function Command() {
       submitTitle="Translate"
       submitIcon={Icon.Message}
       title="What you mean"
-      placeholder="用中文写下你想表达的意思..."
+      placeholder="Type what you mean in Chinese..."
     />
   );
 }
