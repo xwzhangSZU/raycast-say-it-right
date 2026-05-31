@@ -44,9 +44,9 @@ type ExtensionPreferences = {
   "geminiApiKey"?: string,
   /** Gemini TTS Voice - Voice for Gemini TTS. */
   "geminiTtsVoice": "Charon" | "Iapetus" | "Sulafat" | "Puck",
-  /** MiMo (Xiaomi) API Key - Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS. */
+  /** MiMo (Xiaomi) API Key - Xiaomi MiMo Token Plan key (tp-…). Used for MiMo analysis and TTS. */
   "mimoApiKey"?: string,
-  /** MiMo Base URL - MiMo Token Plan Anthropic-compatible base URL for analysis. TTS automatically maps this to the matching OpenAI-compatible /v1 endpoint. Pay-as-you-go /v1 is still supported. */
+  /** MiMo Base URL - MiMo Token Plan Anthropic-compatible base URL for text generation. TTS uses the matching Token Plan /v1 endpoint because the Anthropic messages endpoint does not return audio. */
   "mimoBaseURL": string,
   /** MiMo Analysis Model - MiMo chat model for analysis (thinking is disabled for speed/determinism). */
   "mimoAnalysisModel": "mimo-v2.5" | "mimo-v2.5-pro",

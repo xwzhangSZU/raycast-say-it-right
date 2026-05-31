@@ -47,11 +47,6 @@ export const GEMINI_BASE =
 
 /** MiMo (Xiaomi) Token Plan Anthropic-compatible base. */
 export const MIMO_BASE = "https://token-plan-cn.xiaomimimo.com/anthropic";
-export const MIMO_PAY_AS_YOU_GO_BASE = "https://api.xiaomimimo.com/v1";
-const MIMO_PAY_AS_YOU_GO_HOSTS = new Set([
-  new URL(MIMO_PAY_AS_YOU_GO_BASE).hostname,
-  "api.mimo-v2.com",
-]);
 
 /** MiniMax Token Plan's Anthropic-compatible endpoint. */
 export const MINIMAX_BASE = "https://api.minimaxi.com/anthropic";
@@ -173,7 +168,7 @@ export function resolveAnalysisConfig(
   if (provider === "mimo") {
     const key = prefs.mimoApiKey?.trim();
     if (!key) throw new MissingKeyError("mimo");
-    const mimoBaseURL = resolveMimoBaseURL(key, prefs.mimoBaseURL);
+    const mimoBaseURL = resolveMimoBaseURL(prefs.mimoBaseURL);
     const mimoAnthropic = isAnthropicCompatibleBaseURL(mimoBaseURL);
     return {
       baseURL: mimoBaseURL,
@@ -209,23 +204,8 @@ function isAnthropicCompatibleBaseURL(baseURL: string): boolean {
   return lower.includes("/anthropic") || lower.endsWith("/v1/messages");
 }
 
-export function resolveMimoBaseURL(apiKey: string, baseURL?: string): string {
-  const key = apiKey.trim();
+export function resolveMimoBaseURL(baseURL?: string): string {
   const configured = baseURL?.trim();
-  if (
-    key.startsWith("tp-") &&
-    (!configured || isMimoPayAsYouGoBaseURL(configured))
-  ) {
-    return MIMO_BASE;
-  }
-  return configured || MIMO_BASE;
-}
-
-function isMimoPayAsYouGoBaseURL(baseURL: string): boolean {
-  try {
-    const host = new URL(baseURL).hostname.toLowerCase();
-    return MIMO_PAY_AS_YOU_GO_HOSTS.has(host);
-  } catch {
-    return false;
-  }
+  if (configured && isAnthropicCompatibleBaseURL(configured)) return configured;
+  return MIMO_BASE;
 }

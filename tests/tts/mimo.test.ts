@@ -8,7 +8,7 @@ const cfg: TtsConfig = {
   apiKey: "tp-x",
   voice: "Chloe",
   model: "mimo-v2.5-tts",
-  baseURL: "https://api.xiaomimimo.com/v1",
+  baseURL: "https://token-plan-cn.xiaomimimo.com/v1",
 };
 
 describe("synthesizeMimo", () => {
@@ -30,7 +30,9 @@ describe("synthesizeMimo", () => {
     const [url, init] = (
       fetchImpl as unknown as { mock: { calls: [string, RequestInit][] } }
     ).mock.calls[0];
-    expect(url).toBe("https://api.xiaomimimo.com/v1/chat/completions");
+    expect(url).toBe(
+      "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
+    );
     expect((init.headers as Record<string, string>)["api-key"]).toBe("tp-x");
     const body = init.body as string;
     expect(body).toContain('"role":"assistant"');

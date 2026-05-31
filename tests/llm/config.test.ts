@@ -102,19 +102,19 @@ describe("resolveAnalysisConfig", () => {
     expect(c.authHeader).toBeUndefined();
     expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
-  it("keeps MiMo OpenAI-compatible overrides on chat/completions", () => {
+  it("keeps MiMo text generation on the Anthropic Token Plan endpoint", () => {
     const pro = resolveAnalysisConfig("mimo", {
       mimoApiKey: "tp-x",
       mimoAnalysisModel: "mimo-v2.5-pro",
       mimoBaseURL: "https://token-plan-cn.xiaomimimo.com/v1",
     });
     expect(pro.model).toBe("mimo-v2.5-pro");
-    expect(pro.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
-    expect(pro.apiProtocol).toBe("openai");
-    expect(pro.authHeader).toBe("api-key");
-    expect(pro.extraBody).toEqual({ enable_thinking: false });
+    expect(pro.baseURL).toBe(MIMO_BASE);
+    expect(pro.apiProtocol).toBe("anthropic");
+    expect(pro.authHeader).toBeUndefined();
+    expect(pro.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
-  it("routes Token Plan MiMo keys away from stale pay-as-you-go bases", () => {
+  it("routes stale pay-as-you-go MiMo bases to the Anthropic Token Plan endpoint", () => {
     const c = resolveAnalysisConfig("mimo", {
       mimoApiKey: "tp-x",
       mimoBaseURL: "https://api.xiaomimimo.com/v1",

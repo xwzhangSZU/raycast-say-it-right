@@ -2,13 +2,15 @@ import type { TtsConfig, SynthesizeOptions } from "./types";
 import { TtsError, type SynthResult } from "./openai";
 
 const TIMEOUT_MS = 60_000;
+const DEFAULT_MIMO_TTS_BASE = "https://token-plan-cn.xiaomimimo.com/v1";
 
 /**
  * MiMo (Xiaomi) TTS. Unlike OpenAI/Qwen it rides the OpenAI-compatible
  * `/chat/completions` endpoint: the sentence to speak goes in an `assistant`
  * message, the coaching style instruction in a `user` message, and the audio
- * comes back base64-encoded in `message.audio.data`. Auth is `api-key`, not
- * Bearer. Streaming is not yet GA, so we use the non-streaming form.
+ * comes back base64-encoded in `message.audio.data`. The Anthropic-compatible
+ * Token Plan messages endpoint does not return audio for this model, so TTS
+ * uses the matching OpenAI-compatible Token Plan `/v1` endpoint.
  */
 export async function synthesizeMimo(
   text: string,
@@ -16,7 +18,7 @@ export async function synthesizeMimo(
   cfg: TtsConfig,
   fetchImpl: typeof fetch = fetch,
 ): Promise<SynthResult> {
-  const base = cfg.baseURL ?? "https://api.xiaomimimo.com/v1";
+  const base = cfg.baseURL ?? DEFAULT_MIMO_TTS_BASE;
   const body = {
     model: cfg.model, // mimo-v2.5-tts
     messages: [

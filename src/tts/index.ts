@@ -100,9 +100,7 @@ export function resolveTtsConfig(
         TTS_MODELS.mimo,
         DEFAULT_TTS_MODELS.mimo,
       ),
-      baseURL: mimoTtsBaseURL(
-        resolveMimoBaseURL(prefs.mimoApiKey, prefs.mimoBaseURL),
-      ),
+      baseURL: mimoTtsBaseURL(resolveMimoBaseURL(prefs.mimoBaseURL)),
     };
   }
   if (!prefs.qwenApiKey) throw new MissingKeyError("qwen");
