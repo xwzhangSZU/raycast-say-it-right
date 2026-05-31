@@ -40,6 +40,26 @@ describe("ProsodyAnalysisSchema", () => {
     };
     expect(() => ProsodyAnalysisSchema.parse(bad)).toThrow();
   });
+  it("rejects a stressed word with a null stressIndex", () => {
+    const bad = {
+      ...EXAMPLE,
+      thoughtGroups: [
+        {
+          tone: "fall",
+          words: [
+            {
+              text: "x",
+              syllables: ["x"],
+              stressIndex: null,
+              stressed: true,
+              nuclear: false,
+            },
+          ],
+        },
+      ],
+    };
+    expect(() => ProsodyAnalysisSchema.parse(bad)).toThrow();
+  });
   it("rejects a stressIndex past the last syllable", () => {
     const bad = {
       ...EXAMPLE,
