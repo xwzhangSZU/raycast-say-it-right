@@ -1,4 +1,4 @@
-import { Detail, getSelectedText } from "@raycast/api";
+import { Clipboard, Detail } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { TranslateView } from "./TranslateView";
 
@@ -9,8 +9,8 @@ export default function Command() {
   useEffect(() => {
     (async () => {
       try {
-        const sel = (await getSelectedText())?.trim();
-        if (sel) setText(sel);
+        const clipboardText = (await Clipboard.readText())?.trim();
+        if (clipboardText) setText(clipboardText);
         else setFailed(true);
       } catch {
         setFailed(true);
@@ -24,7 +24,7 @@ export default function Command() {
         text={text}
         mode="express-intent"
         title="Natural Expression"
-        sourceTitle="Selected Intent"
+        sourceTitle="Clipboard Intent"
       />
     );
   }
@@ -32,10 +32,10 @@ export default function Command() {
     return (
       <Detail
         markdown={
-          "# No Selected Text\n\nSelect text in another app and run this command again."
+          "# No Clipboard Text\n\nCopy text to the clipboard and run this command again."
         }
       />
     );
   }
-  return <Detail isLoading={true} markdown="# Translating..." />;
+  return <Detail isLoading={true} markdown="# Reading Clipboard..." />;
 }

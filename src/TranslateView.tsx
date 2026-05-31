@@ -9,7 +9,11 @@ import {
   type ProviderName,
 } from "./llm/config";
 import { PROVIDER_IDS } from "./llm/models";
-import { resolveTranslationTarget, translateText } from "./llm/translate";
+import {
+  resolveTranslationTarget,
+  translateText,
+  type TranslationPromptMode,
+} from "./llm/translate";
 import { getPrefs } from "./lib/preferences";
 import {
   readTranslationCache,
@@ -26,7 +30,17 @@ interface TranslationState {
   failed?: boolean;
 }
 
-export function TranslateView({ text }: { text: string }) {
+export function TranslateView({
+  text,
+  mode = "translate",
+  title,
+  sourceTitle,
+}: {
+  text: string;
+  mode?: TranslationPromptMode;
+  title?: string;
+  sourceTitle?: string;
+}) {
   const source = text.trim();
   const prefs = useMemo(() => getPrefs(), []);
   const [provider, setProvider] = useState<ProviderName>(
@@ -58,6 +72,7 @@ export function TranslateView({ text }: { text: string }) {
         provider,
         model,
         targetLanguage: target.language,
+        promptMode: mode === "express-intent" ? mode : undefined,
       });
 
       setState({
@@ -76,7 +91,10 @@ export function TranslateView({ text }: { text: string }) {
 
       try {
         const cfg = resolveAnalysisConfig(provider, prefs);
-        const result = await translateText(source, cfg, target.language);
+        const result = await translateText(source, cfg, {
+          preferredLanguage: target.language,
+          mode,
+        });
         writeTranslationCache(key, result);
         if (generation === generationRef.current) {
           setState({ ...result, isLoading: false });
@@ -92,7 +110,7 @@ export function TranslateView({ text }: { text: string }) {
         await reportError(err);
       }
     },
-    [prefs, provider, source],
+    [mode, prefs, provider, source],
   );
 
   useEffect(() => {
@@ -113,7 +131,17 @@ export function TranslateView({ text }: { text: string }) {
         ]
       : undefined;
 
-  const markdown = renderTranslationMarkdown(source, state);
+  const markdown = renderTranslationMarkdown(source, state, {
+    title:
+      title ??
+      (mode === "express-intent" ? "Natural Expression" : "Translation"),
+    sourceTitle:
+      sourceTitle ?? (mode === "express-intent" ? "Intent" : "Source"),
+    emptyLabel:
+      mode === "express-intent"
+        ? "Could not express this intent. Use Refresh Translation to try again."
+        : undefined,
+  });
 
   return (
     <Detail
@@ -134,7 +162,9 @@ export function TranslateView({ text }: { text: string }) {
       actions={
         <ActionPanel>
           <Action.CopyToClipboard
-            title="Copy Translation"
+            title={
+              mode === "express-intent" ? "Copy Expression" : "Copy Translation"
+            }
             content={state.translation ?? ""}
             shortcut={{ modifiers: ["cmd"], key: "c" }}
           />
