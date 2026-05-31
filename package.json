@@ -5,7 +5,9 @@
   "description": "Analyze selected English text for stress, intonation, rhythm; hear a model reading.",
   "icon": "extension-icon.png",
   "author": "xianwei_zhang",
-  "categories": ["Productivity"],
+  "categories": [
+    "Productivity"
+  ],
   "license": "MIT",
   "commands": [
     {
@@ -24,72 +26,643 @@
     }
   ],
   "preferences": [
-    { "name": "defaultAnalysisProvider", "title": "Analysis Provider", "description": "Preferred provider when multiple API keys are set. If only one key is filled, that provider is used automatically.", "type": "dropdown", "required": false, "default": "openai",
-      "data": [ { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" }, { "title": "Gemini", "value": "gemini" }, { "title": "MiMo", "value": "mimo" } ] },
-    { "name": "openaiApiKey", "title": "OpenAI API Key", "description": "Used for OpenAI analysis and TTS.", "type": "password", "required": false },
-    { "name": "openaiAnalysisModel", "title": "OpenAI Analysis Model", "description": "Chat model for analysis.", "type": "textfield", "required": false, "default": "gpt-4o-mini" },
-    { "name": "openaiTtsVoice", "title": "OpenAI TTS Voice", "description": "Voice for OpenAI TTS.", "type": "dropdown", "required": false, "default": "alloy",
+    {
+      "name": "defaultAnalysisProvider",
+      "title": "Analysis Provider",
+      "description": "Preferred provider when multiple analysis keys are set. If only one analysis key is filled, that provider is used automatically.",
+      "type": "dropdown",
+      "required": false,
+      "default": "qwen",
       "data": [
-        { "title": "Alloy", "value": "alloy" },
-        { "title": "Ash", "value": "ash" },
-        { "title": "Coral", "value": "coral" },
-        { "title": "Echo", "value": "echo" },
-        { "title": "Fable", "value": "fable" },
-        { "title": "Nova", "value": "nova" },
-        { "title": "Onyx", "value": "onyx" },
-        { "title": "Sage", "value": "sage" },
-        { "title": "Shimmer", "value": "shimmer" }
-      ] },
-    { "name": "qwenApiKey", "title": "Qwen (DashScope) API Key", "description": "Used for Qwen analysis and TTS.", "type": "password", "required": false },
-    { "name": "qwenRegion", "title": "Qwen Region", "description": "DashScope region (affects base URL).", "type": "dropdown", "required": false, "default": "beijing",
-      "data": [ { "title": "Beijing (cn)", "value": "beijing" }, { "title": "International (Singapore)", "value": "intl" } ] },
-    { "name": "qwenAnalysisModel", "title": "Qwen Analysis Model", "description": "Qwen chat model used for analysis.", "type": "dropdown", "required": false, "default": "qwen3.6-flash",
+        {
+          "title": "Qwen",
+          "value": "qwen"
+        },
+        {
+          "title": "MiniMax",
+          "value": "minimax"
+        },
+        {
+          "title": "MiMo",
+          "value": "mimo"
+        },
+        {
+          "title": "Gemini",
+          "value": "gemini"
+        },
+        {
+          "title": "OpenAI",
+          "value": "openai"
+        }
+      ]
+    },
+    {
+      "name": "openaiApiKey",
+      "title": "OpenAI API Key",
+      "description": "Used for OpenAI analysis and TTS.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "openaiAnalysisModel",
+      "title": "OpenAI Analysis Model",
+      "description": "OpenAI model used for pronunciation analysis.",
+      "type": "dropdown",
+      "required": false,
+      "default": "gpt-5.5",
       "data": [
-        { "title": "qwen3.6-flash — fast & low-cost (recommended)", "value": "qwen3.6-flash" },
-        { "title": "qwen3.6-plus — balanced quality", "value": "qwen3.6-plus" },
-        { "title": "qwen3.7-max — most capable (flagship)", "value": "qwen3.7-max" }
-      ] },
-    { "name": "qwenAnalysisBaseURL", "title": "Qwen Analysis Base URL", "description": "Optional OpenAI-compatible base URL for Qwen ANALYSIS only, e.g. Alibaba Token Plan: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1 . Empty = standard DashScope endpoint. TTS always uses the standard API.", "type": "textfield", "required": false },
-    { "name": "qwenAnalysisApiKey", "title": "Qwen Analysis API Key", "description": "Optional separate key for Qwen ANALYSIS (e.g. a Token Plan sk-sp-… key). Falls back to the main Qwen key if empty. TTS always uses the main Qwen key.", "type": "password", "required": false },
-    { "name": "qwenTtsVoice", "title": "Qwen TTS Voice", "description": "Voice for Qwen TTS (all support English).", "type": "dropdown", "required": false, "default": "Cherry",
+        {
+          "title": "GPT-5.5",
+          "value": "gpt-5.5"
+        }
+      ]
+    },
+    {
+      "name": "openaiTtsModel",
+      "title": "OpenAI TTS Model",
+      "description": "OpenAI model used for read-aloud.",
+      "type": "dropdown",
+      "required": false,
+      "default": "gpt-4o-mini-tts",
       "data": [
-        { "title": "Cherry — warm, bright female", "value": "Cherry" },
-        { "title": "Jennifer — expressive female", "value": "Jennifer" },
-        { "title": "Katerina — relaxed, conversational female", "value": "Katerina" },
-        { "title": "Ethan — natural, friendly male", "value": "Ethan" },
-        { "title": "Ryan — energetic male", "value": "Ryan" },
-        { "title": "Elias — clear, explanatory male", "value": "Elias" },
-        { "title": "Nofish — lively, youthful", "value": "Nofish" }
-      ] },
-    { "name": "geminiApiKey", "title": "Gemini API Key", "description": "Google AI Studio key for Gemini analysis. Analysis only — Gemini does not do TTS here.", "type": "password", "required": false },
-    { "name": "geminiAnalysisModel", "title": "Gemini Analysis Model", "description": "Gemini chat model for analysis. Default gemini-3.5-flash (best balance). For maximum accuracy try gemini-3.1-pro-preview; for always-latest use gemini-flash-latest.", "type": "textfield", "required": false, "default": "gemini-3.5-flash" },
-    { "name": "mimoApiKey", "title": "MiMo (Xiaomi) API Key", "description": "Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS.", "type": "password", "required": false },
-    { "name": "mimoBaseURL", "title": "MiMo Base URL", "description": "OpenAI-compatible base URL. Pay-as-you-go: https://api.xiaomimimo.com/v1 (default). Token Plan: token-plan-{cn,sgp,ams}.xiaomimimo.com/v1 (see your 订阅管理 page).", "type": "textfield", "required": false, "default": "https://api.xiaomimimo.com/v1" },
-    { "name": "mimoAnalysisModel", "title": "MiMo Analysis Model", "description": "MiMo chat model for analysis (thinking is disabled for speed/determinism).", "type": "dropdown", "required": false, "default": "mimo-v2.5",
+        {
+          "title": "GPT-4o Mini TTS",
+          "value": "gpt-4o-mini-tts"
+        }
+      ]
+    },
+    {
+      "name": "openaiTtsVoice",
+      "title": "OpenAI TTS Voice",
+      "description": "Voice for OpenAI TTS.",
+      "type": "dropdown",
+      "required": false,
+      "default": "marin",
       "data": [
-        { "title": "mimo-v2.5 — standard (recommended)", "value": "mimo-v2.5" },
-        { "title": "mimo-v2.5-pro — stronger reasoning", "value": "mimo-v2.5-pro" }
-      ] },
-    { "name": "mimoTtsVoice", "title": "MiMo TTS Voice", "description": "Voice for MiMo TTS (English voices).", "type": "dropdown", "required": false, "default": "Chloe",
+        {
+          "title": "Marin",
+          "value": "marin"
+        },
+        {
+          "title": "Cedar",
+          "value": "cedar"
+        },
+        {
+          "title": "Coral",
+          "value": "coral"
+        },
+        {
+          "title": "Alloy",
+          "value": "alloy"
+        },
+        {
+          "title": "Ash",
+          "value": "ash"
+        },
+        {
+          "title": "Ballad",
+          "value": "ballad"
+        },
+        {
+          "title": "Echo",
+          "value": "echo"
+        },
+        {
+          "title": "Fable",
+          "value": "fable"
+        },
+        {
+          "title": "Nova",
+          "value": "nova"
+        },
+        {
+          "title": "Onyx",
+          "value": "onyx"
+        },
+        {
+          "title": "Sage",
+          "value": "sage"
+        },
+        {
+          "title": "Shimmer",
+          "value": "shimmer"
+        },
+        {
+          "title": "Verse",
+          "value": "verse"
+        }
+      ]
+    },
+    {
+      "name": "qwenApiKey",
+      "title": "DashScope API Key",
+      "description": "Used only for Qwen-TTS. Qwen analysis uses the Token Plan key below.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "qwenRegion",
+      "title": "Qwen-TTS Region",
+      "description": "DashScope TTS region (affects Qwen-TTS base URL).",
+      "type": "dropdown",
+      "required": false,
+      "default": "beijing",
       "data": [
-        { "title": "Chloe — English female", "value": "Chloe" },
-        { "title": "Mia — English female", "value": "Mia" },
-        { "title": "Milo — English male", "value": "Milo" },
-        { "title": "Dean — English male", "value": "Dean" }
-      ] },
-    { "name": "ttsProvider", "title": "TTS Provider", "description": "Which provider synthesizes audio.", "type": "dropdown", "required": false, "default": "follow-analysis",
-      "data": [ { "title": "Follow Analysis Provider", "value": "follow-analysis" }, { "title": "OpenAI", "value": "openai" }, { "title": "Qwen", "value": "qwen" }, { "title": "MiMo", "value": "mimo" } ] },
-    { "name": "loopCount", "title": "Shadowing Loop Count", "description": "How many times the Shadowing Loop repeats the sentence.", "type": "textfield", "required": false, "default": "3" },
-    { "name": "loopGap", "title": "Shadowing Loop Gap (seconds)", "description": "Pause between repeats in the Shadowing Loop.", "type": "textfield", "required": false, "default": "1.0" }
+        {
+          "title": "Beijing (cn)",
+          "value": "beijing"
+        },
+        {
+          "title": "International (Singapore)",
+          "value": "intl"
+        }
+      ]
+    },
+    {
+      "name": "qwenAnalysisModel",
+      "title": "Qwen Analysis Model",
+      "description": "Qwen chat model used for analysis.",
+      "type": "dropdown",
+      "required": false,
+      "default": "qwen3.6-flash",
+      "data": [
+        {
+          "title": "qwen3.6-flash — fast & low-cost (recommended)",
+          "value": "qwen3.6-flash"
+        },
+        {
+          "title": "qwen3.6-plus — balanced quality",
+          "value": "qwen3.6-plus"
+        }
+      ]
+    },
+    {
+      "name": "qwenAnalysisBaseURL",
+      "title": "Qwen Analysis Base URL",
+      "description": "Qwen Token Plan base URL for analysis. Default is OpenAI-compatible; /apps/anthropic is also supported. TTS uses DashScope separately.",
+      "type": "textfield",
+      "required": false,
+      "default": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+    },
+    {
+      "name": "qwenAnalysisApiKey",
+      "title": "Qwen Token Plan API Key",
+      "description": "Used only for Qwen analysis. Does not affect Qwen-TTS.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "qwenTtsModel",
+      "title": "Qwen TTS Model",
+      "description": "Qwen TTS model used for read-aloud.",
+      "type": "dropdown",
+      "required": false,
+      "default": "qwen3-tts-flash",
+      "data": [
+        {
+          "title": "Qwen3 TTS Flash",
+          "value": "qwen3-tts-flash"
+        },
+        {
+          "title": "Qwen3 TTS Instruct Flash",
+          "value": "qwen3-tts-instruct-flash"
+        }
+      ]
+    },
+    {
+      "name": "qwenTtsVoice",
+      "title": "Qwen TTS Voice",
+      "description": "Voice for Qwen TTS (all support English).",
+      "type": "dropdown",
+      "required": false,
+      "default": "Jennifer",
+      "data": [
+        {
+          "title": "Jennifer — expressive female",
+          "value": "Jennifer"
+        },
+        {
+          "title": "Aiden — clear male",
+          "value": "Aiden"
+        },
+        {
+          "title": "Neil — natural male",
+          "value": "Neil"
+        },
+        {
+          "title": "Elias — clear, explanatory male",
+          "value": "Elias"
+        },
+        {
+          "title": "Cherry — warm, bright female",
+          "value": "Cherry"
+        },
+        {
+          "title": "Katerina — relaxed, conversational female",
+          "value": "Katerina"
+        },
+        {
+          "title": "Ethan — natural, friendly male",
+          "value": "Ethan"
+        },
+        {
+          "title": "Ryan — energetic male",
+          "value": "Ryan"
+        },
+        {
+          "title": "Nofish — lively, youthful",
+          "value": "Nofish"
+        }
+      ]
+    },
+    {
+      "name": "minimaxApiKey",
+      "title": "MiniMax API Key",
+      "description": "Used for MiniMax analysis and TTS.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "minimaxBaseURL",
+      "title": "MiniMax Analysis Base URL",
+      "description": "MiniMax Token Plan Anthropic-compatible endpoint (ANTHROPIC_BASE_URL).",
+      "type": "textfield",
+      "required": false,
+      "default": "https://api.minimaxi.com/anthropic"
+    },
+    {
+      "name": "minimaxAnalysisModel",
+      "title": "MiniMax Analysis Model",
+      "description": "MiniMax model used for pronunciation analysis.",
+      "type": "dropdown",
+      "required": false,
+      "default": "MiniMax-M2.7-highspeed",
+      "data": [
+        {
+          "title": "M2.7 High-Speed",
+          "value": "MiniMax-M2.7-highspeed"
+        }
+      ]
+    },
+    {
+      "name": "minimaxTtsBaseURL",
+      "title": "MiniMax TTS Base URL",
+      "description": "MiniMax TTS base URL.",
+      "type": "textfield",
+      "required": false,
+      "default": "https://api.minimaxi.com/v1"
+    },
+    {
+      "name": "minimaxTtsModel",
+      "title": "MiniMax TTS Model",
+      "description": "MiniMax TTS model used for read-aloud.",
+      "type": "dropdown",
+      "required": false,
+      "default": "speech-2.8-turbo",
+      "data": [
+        {
+          "title": "Speech 2.8 Turbo",
+          "value": "speech-2.8-turbo"
+        },
+        {
+          "title": "Speech 2.8 HD",
+          "value": "speech-2.8-hd"
+        }
+      ]
+    },
+    {
+      "name": "minimaxTtsVoiceId",
+      "title": "MiniMax TTS Voice",
+      "description": "Voice ID for MiniMax TTS.",
+      "type": "dropdown",
+      "required": false,
+      "default": "English_expressive_narrator",
+      "data": [
+        {
+          "title": "English Expressive Narrator",
+          "value": "English_expressive_narrator"
+        },
+        {
+          "title": "English Captivating Storyteller",
+          "value": "English_CaptivatingStoryteller"
+        },
+        {
+          "title": "English Trustworthy Man",
+          "value": "English_Trustworth_Man"
+        },
+        {
+          "title": "English Serene Woman",
+          "value": "English_SereneWoman"
+        },
+        {
+          "title": "English Wise Scholar",
+          "value": "English_WiseScholar"
+        }
+      ]
+    },
+    {
+      "name": "geminiApiKey",
+      "title": "Gemini API Key",
+      "description": "Google AI Studio key for Gemini analysis and TTS.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "geminiAnalysisModel",
+      "title": "Gemini Analysis Model",
+      "description": "Gemini model used for pronunciation analysis.",
+      "type": "dropdown",
+      "required": false,
+      "default": "gemini-3.5-flash",
+      "data": [
+        {
+          "title": "Gemini 3.5 Flash",
+          "value": "gemini-3.5-flash"
+        }
+      ]
+    },
+    {
+      "name": "geminiTtsModel",
+      "title": "Gemini TTS Model",
+      "description": "Gemini TTS model used for read-aloud.",
+      "type": "dropdown",
+      "required": false,
+      "default": "gemini-3.1-flash-tts-preview",
+      "data": [
+        {
+          "title": "Gemini 3.1 Flash TTS Preview",
+          "value": "gemini-3.1-flash-tts-preview"
+        }
+      ]
+    },
+    {
+      "name": "geminiTtsVoice",
+      "title": "Gemini TTS Voice",
+      "description": "Voice for Gemini TTS.",
+      "type": "dropdown",
+      "required": false,
+      "default": "Charon",
+      "data": [
+        {
+          "title": "Charon",
+          "value": "Charon"
+        },
+        {
+          "title": "Iapetus",
+          "value": "Iapetus"
+        },
+        {
+          "title": "Sulafat",
+          "value": "Sulafat"
+        },
+        {
+          "title": "Puck",
+          "value": "Puck"
+        }
+      ]
+    },
+    {
+      "name": "mimoApiKey",
+      "title": "MiMo (Xiaomi) API Key",
+      "description": "Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "mimoBaseURL",
+      "title": "MiMo Base URL",
+      "description": "OpenAI-compatible base URL. Pay-as-you-go: https://api.xiaomimimo.com/v1 (default). Token Plan: token-plan-{cn,sgp,ams}.xiaomimimo.com/v1 (see your 订阅管理 page).",
+      "type": "textfield",
+      "required": false,
+      "default": "https://api.xiaomimimo.com/v1"
+    },
+    {
+      "name": "mimoAnalysisModel",
+      "title": "MiMo Analysis Model",
+      "description": "MiMo chat model for analysis (thinking is disabled for speed/determinism).",
+      "type": "dropdown",
+      "required": false,
+      "default": "mimo-v2.5",
+      "data": [
+        {
+          "title": "mimo-v2.5 — standard (recommended)",
+          "value": "mimo-v2.5"
+        },
+        {
+          "title": "mimo-v2.5-pro — stronger reasoning",
+          "value": "mimo-v2.5-pro"
+        }
+      ]
+    },
+    {
+      "name": "mimoTtsModel",
+      "title": "MiMo TTS Model",
+      "description": "MiMo TTS model used for read-aloud.",
+      "type": "dropdown",
+      "required": false,
+      "default": "mimo-v2.5-tts",
+      "data": [
+        {
+          "title": "MiMo V2.5 TTS",
+          "value": "mimo-v2.5-tts"
+        }
+      ]
+    },
+    {
+      "name": "mimoTtsVoice",
+      "title": "MiMo TTS Voice",
+      "description": "Voice for MiMo TTS (English voices).",
+      "type": "dropdown",
+      "required": false,
+      "default": "Chloe",
+      "data": [
+        {
+          "title": "Chloe — English female",
+          "value": "Chloe"
+        },
+        {
+          "title": "Mia — English female",
+          "value": "Mia"
+        },
+        {
+          "title": "Milo — English male",
+          "value": "Milo"
+        },
+        {
+          "title": "Dean — English male",
+          "value": "Dean"
+        }
+      ]
+    },
+    {
+      "name": "ttsProvider",
+      "title": "TTS Provider",
+      "description": "Which provider synthesizes audio.",
+      "type": "dropdown",
+      "required": false,
+      "default": "follow-analysis",
+      "data": [
+        {
+          "title": "Follow Analysis Provider",
+          "value": "follow-analysis"
+        },
+        {
+          "title": "Qwen",
+          "value": "qwen"
+        },
+        {
+          "title": "MiniMax",
+          "value": "minimax"
+        },
+        {
+          "title": "MiMo",
+          "value": "mimo"
+        },
+        {
+          "title": "Gemini",
+          "value": "gemini"
+        },
+        {
+          "title": "OpenAI",
+          "value": "openai"
+        }
+      ]
+    },
+    {
+      "name": "translationTargetLanguage",
+      "title": "Translation Target",
+      "description": "Target language for Translate actions. Auto translates Chinese to English and other text to Simplified Chinese.",
+      "type": "dropdown",
+      "required": false,
+      "default": "auto",
+      "data": [
+        {
+          "title": "Auto",
+          "value": "auto"
+        },
+        {
+          "title": "Chinese Simplified",
+          "value": "zh-Hans"
+        },
+        {
+          "title": "Chinese Traditional",
+          "value": "zh-Hant"
+        },
+        {
+          "title": "English",
+          "value": "en"
+        },
+        {
+          "title": "Japanese",
+          "value": "ja"
+        },
+        {
+          "title": "Korean",
+          "value": "ko"
+        },
+        {
+          "title": "French",
+          "value": "fr"
+        },
+        {
+          "title": "German",
+          "value": "de"
+        },
+        {
+          "title": "Spanish",
+          "value": "es"
+        },
+        {
+          "title": "Italian",
+          "value": "it"
+        },
+        {
+          "title": "Portuguese",
+          "value": "pt"
+        },
+        {
+          "title": "Russian",
+          "value": "ru"
+        },
+        {
+          "title": "Arabic",
+          "value": "ar"
+        },
+        {
+          "title": "Hindi",
+          "value": "hi"
+        },
+        {
+          "title": "Vietnamese",
+          "value": "vi"
+        },
+        {
+          "title": "Thai",
+          "value": "th"
+        },
+        {
+          "title": "Indonesian",
+          "value": "id"
+        },
+        {
+          "title": "Turkish",
+          "value": "tr"
+        },
+        {
+          "title": "Dutch",
+          "value": "nl"
+        },
+        {
+          "title": "Polish",
+          "value": "pl"
+        }
+      ]
+    },
+    {
+      "name": "sentencesPerPage",
+      "title": "Sentences Per Page",
+      "description": "How many sentences are shown and analyzed together for long passages.",
+      "type": "textfield",
+      "required": false,
+      "default": "5"
+    },
+    {
+      "name": "loopCount",
+      "title": "Shadowing Loop Count",
+      "description": "How many times the Shadowing Loop repeats the sentence.",
+      "type": "textfield",
+      "required": false,
+      "default": "3"
+    },
+    {
+      "name": "loopGap",
+      "title": "Shadowing Loop Gap (seconds)",
+      "description": "Pause between repeats in the Shadowing Loop.",
+      "type": "textfield",
+      "required": false,
+      "default": "1.0"
+    }
   ],
-  "dependencies": { "@raycast/api": "^1.80.0", "zod": "^3.23.0" },
+  "dependencies": {
+    "@raycast/api": "^1.80.0",
+    "zod": "^3.23.0"
+  },
   "devDependencies": {
-    "@raycast/eslint-config": "^1.0.11", "@types/node": "^22.0.0", "@types/react": "^19.0.0",
-    "eslint": "^8.57.0", "prettier": "^3.3.0", "typescript": "^5.5.0", "vitest": "^2.0.0"
+    "@raycast/eslint-config": "^1.0.11",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
   },
   "scripts": {
-    "build": "ray build -e dist", "dev": "ray develop", "lint": "ray lint",
-    "fix-lint": "ray lint --fix", "test": "vitest run", "test:watch": "vitest",
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   }
 }

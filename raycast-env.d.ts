@@ -8,40 +8,66 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Analysis Provider - Preferred provider when multiple API keys are set. If only one key is filled, that provider is used automatically. */
-  "defaultAnalysisProvider": "openai" | "qwen" | "gemini" | "mimo",
+  /** Analysis Provider - Preferred provider when multiple analysis keys are set. If only one analysis key is filled, that provider is used automatically. */
+  "defaultAnalysisProvider": "qwen" | "minimax" | "mimo" | "gemini" | "openai",
   /** OpenAI API Key - Used for OpenAI analysis and TTS. */
   "openaiApiKey"?: string,
-  /** OpenAI Analysis Model - Chat model for analysis. */
-  "openaiAnalysisModel": string,
+  /** OpenAI Analysis Model - OpenAI model used for pronunciation analysis. */
+  "openaiAnalysisModel": "gpt-5.5",
+  /** OpenAI TTS Model - OpenAI model used for read-aloud. */
+  "openaiTtsModel": "gpt-4o-mini-tts",
   /** OpenAI TTS Voice - Voice for OpenAI TTS. */
-  "openaiTtsVoice": "alloy" | "ash" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
-  /** Qwen (DashScope) API Key - Used for Qwen analysis and TTS. */
+  "openaiTtsVoice": "marin" | "cedar" | "coral" | "alloy" | "ash" | "ballad" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse",
+  /** DashScope API Key - Used only for Qwen-TTS. Qwen analysis uses the Token Plan key below. */
   "qwenApiKey"?: string,
-  /** Qwen Region - DashScope region (affects base URL). */
+  /** Qwen-TTS Region - DashScope TTS region (affects Qwen-TTS base URL). */
   "qwenRegion": "beijing" | "intl",
   /** Qwen Analysis Model - Qwen chat model used for analysis. */
-  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.6-plus" | "qwen3.7-max",
-  /** Qwen Analysis Base URL - Optional OpenAI-compatible base URL for Qwen ANALYSIS only, e.g. Alibaba Token Plan: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1 . Empty = standard DashScope endpoint. TTS always uses the standard API. */
-  "qwenAnalysisBaseURL"?: string,
-  /** Qwen Analysis API Key - Optional separate key for Qwen ANALYSIS (e.g. a Token Plan sk-sp-… key). Falls back to the main Qwen key if empty. TTS always uses the main Qwen key. */
+  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.6-plus",
+  /** Qwen Analysis Base URL - Qwen Token Plan base URL for analysis. Default is OpenAI-compatible; /apps/anthropic is also supported. TTS uses DashScope separately. */
+  "qwenAnalysisBaseURL": string,
+  /** Qwen Token Plan API Key - Used only for Qwen analysis. Does not affect Qwen-TTS. */
   "qwenAnalysisApiKey"?: string,
+  /** Qwen TTS Model - Qwen TTS model used for read-aloud. */
+  "qwenTtsModel": "qwen3-tts-flash" | "qwen3-tts-instruct-flash",
   /** Qwen TTS Voice - Voice for Qwen TTS (all support English). */
-  "qwenTtsVoice": "Cherry" | "Jennifer" | "Katerina" | "Ethan" | "Ryan" | "Elias" | "Nofish",
-  /** Gemini API Key - Google AI Studio key for Gemini analysis. Analysis only — Gemini does not do TTS here. */
+  "qwenTtsVoice": "Jennifer" | "Aiden" | "Neil" | "Elias" | "Cherry" | "Katerina" | "Ethan" | "Ryan" | "Nofish",
+  /** MiniMax API Key - Used for MiniMax analysis and TTS. */
+  "minimaxApiKey"?: string,
+  /** MiniMax Analysis Base URL - MiniMax Token Plan Anthropic-compatible endpoint (ANTHROPIC_BASE_URL). */
+  "minimaxBaseURL": string,
+  /** MiniMax Analysis Model - MiniMax model used for pronunciation analysis. */
+  "minimaxAnalysisModel": "MiniMax-M2.7-highspeed",
+  /** MiniMax TTS Base URL - MiniMax TTS base URL. */
+  "minimaxTtsBaseURL": string,
+  /** MiniMax TTS Model - MiniMax TTS model used for read-aloud. */
+  "minimaxTtsModel": "speech-2.8-turbo" | "speech-2.8-hd",
+  /** MiniMax TTS Voice - Voice ID for MiniMax TTS. */
+  "minimaxTtsVoiceId": "English_expressive_narrator" | "English_CaptivatingStoryteller" | "English_Trustworth_Man" | "English_SereneWoman" | "English_WiseScholar",
+  /** Gemini API Key - Google AI Studio key for Gemini analysis and TTS. */
   "geminiApiKey"?: string,
-  /** Gemini Analysis Model - Gemini chat model for analysis. Default gemini-3.5-flash (best balance). For maximum accuracy try gemini-3.1-pro-preview; for always-latest use gemini-flash-latest. */
-  "geminiAnalysisModel": string,
+  /** Gemini Analysis Model - Gemini model used for pronunciation analysis. */
+  "geminiAnalysisModel": "gemini-3.5-flash",
+  /** Gemini TTS Model - Gemini TTS model used for read-aloud. */
+  "geminiTtsModel": "gemini-3.1-flash-tts-preview",
+  /** Gemini TTS Voice - Voice for Gemini TTS. */
+  "geminiTtsVoice": "Charon" | "Iapetus" | "Sulafat" | "Puck",
   /** MiMo (Xiaomi) API Key - Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS. */
   "mimoApiKey"?: string,
   /** MiMo Base URL - OpenAI-compatible base URL. Pay-as-you-go: https://api.xiaomimimo.com/v1 (default). Token Plan: token-plan-{cn,sgp,ams}.xiaomimimo.com/v1 (see your 订阅管理 page). */
   "mimoBaseURL": string,
   /** MiMo Analysis Model - MiMo chat model for analysis (thinking is disabled for speed/determinism). */
   "mimoAnalysisModel": "mimo-v2.5" | "mimo-v2.5-pro",
+  /** MiMo TTS Model - MiMo TTS model used for read-aloud. */
+  "mimoTtsModel": "mimo-v2.5-tts",
   /** MiMo TTS Voice - Voice for MiMo TTS (English voices). */
   "mimoTtsVoice": "Chloe" | "Mia" | "Milo" | "Dean",
   /** TTS Provider - Which provider synthesizes audio. */
-  "ttsProvider": "follow-analysis" | "openai" | "qwen" | "mimo",
+  "ttsProvider": "follow-analysis" | "qwen" | "minimax" | "mimo" | "gemini" | "openai",
+  /** Translation Target - Target language for Translate actions. Auto translates Chinese to English and other text to Simplified Chinese. */
+  "translationTargetLanguage": "auto" | "zh-Hans" | "zh-Hant" | "en" | "ja" | "ko" | "fr" | "de" | "es" | "it" | "pt" | "ru" | "ar" | "hi" | "vi" | "th" | "id" | "tr" | "nl" | "pl",
+  /** Sentences Per Page - How many sentences are shown and analyzed together for long passages. */
+  "sentencesPerPage": string,
   /** Shadowing Loop Count - How many times the Shadowing Loop repeats the sentence. */
   "loopCount": string,
   /** Shadowing Loop Gap (seconds) - Pause between repeats in the Shadowing Loop. */

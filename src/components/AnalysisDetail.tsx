@@ -32,11 +32,13 @@ export function AnalysisPlaceholder(props: {
 }
 
 export interface AnalysisDetailProps {
-  analysis: ProsodyAnalysis;
+  items: AnalysisPageItem[];
   provider: ProviderName;
   isLoading: boolean;
-  sentenceIndex: number;
+  activeIndex: number;
   sentenceTotal: number;
+  pageStart: number;
+  pageEnd: number;
   onPlay: () => void;
   onSlow: () => void;
   onSlower: () => void;
@@ -46,28 +48,49 @@ export interface AnalysisDetailProps {
   onSwitchProvider: () => void;
   /** Label of the next provider in the cycle; omit to hide the switch action. */
   switchToLabel?: string;
+  onRetryCurrent: () => void;
+  onTranslateCurrent: () => void;
+  onTranslatePage: () => void;
+  activeTranslation?: string;
   onNewExample?: () => void;
-  onNext?: () => void;
-  onPrev?: () => void;
+  onSelectSentence: (index: number) => void;
+  onNextSentence?: () => void;
+  onPrevSentence?: () => void;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
+}
+
+export interface AnalysisPageItem {
+  index: number;
+  text: string;
+  analysis?: ProsodyAnalysis;
+  isLoading?: boolean;
+  failed?: boolean;
+  translation?: string;
+  translationTarget?: string;
+  translationLoading?: boolean;
+  translationFailed?: boolean;
 }
 
 export function AnalysisDetail(props: AnalysisDetailProps) {
-  const { analysis, provider, isLoading, sentenceIndex, sentenceTotal } = props;
-  // When the input has multiple sentences, surface position + how to move on
-  // screen. Without this, sentence stepping is invisible (buried in ⌘K) and
-  // users get stuck replaying sentence 1.
-  const navHint =
-    sentenceTotal > 1
-      ? `\n\n---\n\n**Sentence ${sentenceIndex + 1} of ${sentenceTotal}** — \`⌘]\` next · \`⌘[\` previous · \`⌘K\` for all actions`
-      : "";
-  const markdown = renderAnalysis(analysis) + navHint;
+  const {
+    items,
+    provider,
+    isLoading,
+    activeIndex,
+    sentenceTotal,
+    pageStart,
+    pageEnd,
+  } = props;
+  const activeItem = items.find((item) => item.index === activeIndex);
+  const markdown = renderPageMarkdown(items, activeIndex, sentenceTotal);
   const providerLabel = PROVIDER_LABELS[provider];
   return (
     <Detail
       isLoading={isLoading}
       navigationTitle={
         sentenceTotal > 1
-          ? `Sentence ${sentenceIndex + 1} / ${sentenceTotal}`
+          ? `Sentences ${pageStart + 1}-${pageEnd} / ${sentenceTotal}`
           : undefined
       }
       markdown={markdown}
@@ -77,14 +100,21 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
           <Detail.Metadata.Label title="Accent" text="General American" />
           {sentenceTotal > 1 ? (
             <Detail.Metadata.Label
-              title="Sentence"
-              text={`${sentenceIndex + 1} / ${sentenceTotal}`}
+              title="Page"
+              text={`${pageStart + 1}-${pageEnd} / ${sentenceTotal}`}
             />
           ) : null}
-          {analysis.isGeneratedExample && analysis.sourceWord ? (
+          {sentenceTotal > 1 ? (
+            <Detail.Metadata.Label
+              title="Active"
+              text={`${activeIndex + 1} / ${sentenceTotal}`}
+            />
+          ) : null}
+          {activeItem?.analysis?.isGeneratedExample &&
+          activeItem.analysis.sourceWord ? (
             <Detail.Metadata.Label
               title="Example for"
-              text={analysis.sourceWord}
+              text={activeItem.analysis.sourceWord}
             />
           ) : null}
         </Detail.Metadata>
@@ -118,24 +148,57 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
               onAction={props.onRepeat}
             />
           </ActionPanel.Section>
-          {props.onNext || props.onPrev ? (
+          {props.onNextSentence ||
+          props.onPrevSentence ||
+          props.onNextPage ||
+          props.onPrevPage ? (
             <ActionPanel.Section title="Navigate">
-              {props.onNext ? (
+              {props.onNextSentence ? (
                 <Action
                   title="Next Sentence"
                   icon={Icon.ArrowRight}
                   shortcut={{ modifiers: ["cmd"], key: "]" }}
-                  onAction={props.onNext}
+                  onAction={props.onNextSentence}
                 />
               ) : null}
-              {props.onPrev ? (
+              {props.onPrevSentence ? (
                 <Action
                   title="Previous Sentence"
                   icon={Icon.ArrowLeft}
                   shortcut={{ modifiers: ["cmd"], key: "[" }}
-                  onAction={props.onPrev}
+                  onAction={props.onPrevSentence}
                 />
               ) : null}
+              {props.onNextPage ? (
+                <Action
+                  title="Next Page"
+                  icon={Icon.ArrowRightCircle}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "]" }}
+                  onAction={props.onNextPage}
+                />
+              ) : null}
+              {props.onPrevPage ? (
+                <Action
+                  title="Previous Page"
+                  icon={Icon.ArrowLeftCircle}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "[" }}
+                  onAction={props.onPrevPage}
+                />
+              ) : null}
+            </ActionPanel.Section>
+          ) : null}
+          {items.length > 1 ? (
+            <ActionPanel.Section title="Select Sentence">
+              {items.map((item) => (
+                <Action
+                  key={item.index}
+                  title={`Select Sentence ${item.index + 1}`}
+                  icon={
+                    item.index === activeIndex ? Icon.CheckCircle : Icon.Circle
+                  }
+                  onAction={() => props.onSelectSentence(item.index)}
+                />
+              ))}
             </ActionPanel.Section>
           ) : null}
           <ActionPanel.Section title="Tools">
@@ -153,6 +216,24 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
                 onAction={props.onSwitchProvider}
               />
             ) : null}
+            <Action
+              title="Refresh Current Analysis"
+              icon={Icon.ArrowClockwise}
+              shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
+              onAction={props.onRetryCurrent}
+            />
+            <Action
+              title="Translate Current Sentence"
+              icon={Icon.SpeechBubble}
+              shortcut={{ modifiers: ["cmd"], key: "t" }}
+              onAction={props.onTranslateCurrent}
+            />
+            <Action
+              title="Translate Page"
+              icon={Icon.Text}
+              shortcut={{ modifiers: ["cmd", "shift"], key: "t" }}
+              onAction={props.onTranslatePage}
+            />
             {props.onNewExample ? (
               <Action
                 title="New Example Sentence"
@@ -167,9 +248,14 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
               shortcut={{ modifiers: ["cmd"], key: "c" }}
             />
             <Action.CopyToClipboard
+              title="Copy Translation"
+              content={props.activeTranslation ?? ""}
+              shortcut={{ modifiers: ["cmd", "opt"], key: "c" }}
+            />
+            <Action.CopyToClipboard
               // eslint-disable-next-line @raycast/prefer-title-case
               title="Copy IPA"
-              content={analysis.ipa}
+              content={activeItem?.analysis?.ipa ?? ""}
               shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
             />
           </ActionPanel.Section>
@@ -177,4 +263,63 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
       }
     />
   );
+}
+
+function renderPageMarkdown(
+  items: AnalysisPageItem[],
+  activeIndex: number,
+  sentenceTotal: number,
+): string {
+  if (items.length === 0) return "# Nothing to practice";
+
+  const first = items[0].index + 1;
+  const last = items[items.length - 1].index + 1;
+  const lines = [
+    "# Say It Right",
+    "",
+    sentenceTotal > 1
+      ? `Page ${first}-${last} of ${sentenceTotal}. Active sentence: ${activeIndex + 1}.`
+      : "Single sentence.",
+    "",
+    "`⌘]` next sentence · `⌘[` previous sentence · `⌘⇧]` next page · `⌘⇧[` previous page",
+  ];
+
+  for (const item of items) {
+    const activeMark = item.index === activeIndex ? "▶ " : "";
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push(`## ${activeMark}${item.index + 1}. ${item.text}`);
+    lines.push("");
+    if (item.analysis) {
+      lines.push(
+        renderAnalysis(item.analysis, {
+          includeTitle: false,
+          sectionHeadingLevel: 3,
+        }),
+      );
+    } else if (item.failed) {
+      lines.push(
+        "_Could not analyze this sentence. Use Retry Current Sentence to try again._",
+      );
+    } else {
+      lines.push("_Analyzing this sentence..._");
+    }
+    if (item.translation || item.translationLoading || item.translationFailed) {
+      lines.push("");
+      lines.push("### Translation");
+      if (item.translation) {
+        const target = item.translationTarget
+          ? `_${item.translationTarget}_\n\n`
+          : "";
+        lines.push(`${target}> ${item.translation}`);
+      } else if (item.translationFailed) {
+        lines.push("_Could not translate this sentence._");
+      } else {
+        lines.push("_Translating..._");
+      }
+    }
+  }
+
+  return lines.join("\n");
 }

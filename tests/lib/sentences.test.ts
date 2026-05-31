@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { splitSentences } from "../../src/lib/sentences";
+import {
+  splitSentences,
+  resolveSentencesPerPage,
+} from "../../src/lib/sentences";
 
 describe("splitSentences", () => {
   it("splits on sentence boundaries", () => {
@@ -10,5 +13,20 @@ describe("splitSentences", () => {
   });
   it("returns empty for blank input", () => {
     expect(splitSentences("   ")).toEqual([]);
+  });
+  it("does not split common abbreviations or decimals", () => {
+    expect(splitSentences("Dr. Smith scored 3.5 points. Really?")).toEqual([
+      "Dr. Smith scored 3.5 points.",
+      "Really?",
+    ]);
+  });
+});
+
+describe("resolveSentencesPerPage", () => {
+  it("defaults to five and clamps to the player bounds", () => {
+    expect(resolveSentencesPerPage(undefined)).toBe(5);
+    expect(resolveSentencesPerPage("0")).toBe(1);
+    expect(resolveSentencesPerPage("50")).toBe(12);
+    expect(resolveSentencesPerPage("7.8")).toBe(7);
   });
 });

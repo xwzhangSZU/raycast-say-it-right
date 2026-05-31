@@ -12,6 +12,7 @@ const CACHE_DIR = join(tmpdir(), "raycast-speaking-coach-audio");
 export function audioCacheKey(parts: {
   text: string;
   provider: string;
+  model?: string;
   voice: string;
   rate: number;
 }): string {

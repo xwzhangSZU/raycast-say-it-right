@@ -14,10 +14,18 @@ export interface SynthesizeOptions {
 }
 
 export interface TtsPrefs extends RawPrefs {
+  openaiTtsModel?: string;
   openaiTtsVoice?: string;
+  qwenTtsModel?: string;
   qwenTtsVoice?: string;
+  minimaxTtsBaseURL?: string;
+  minimaxTtsModel?: string;
+  minimaxTtsVoiceId?: string;
+  geminiTtsModel?: string;
+  geminiTtsVoice?: string;
+  mimoTtsModel?: string;
   mimoTtsVoice?: string;
-  ttsProvider?: "follow-analysis" | "openai" | "qwen" | "mimo";
+  ttsProvider?: "follow-analysis" | TtsProviderName;
   loopCount?: string;
   loopGap?: string;
 }

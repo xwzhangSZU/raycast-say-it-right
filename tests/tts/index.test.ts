@@ -17,8 +17,11 @@ describe("resolveTtsProvider", () => {
   it("lets mimo speak when following the analysis provider", () => {
     expect(resolveTtsProvider("mimo", {})).toBe("mimo");
   });
-  it("falls back off gemini (no TTS) to a configured TTS provider", () => {
-    expect(resolveTtsProvider("gemini", { qwenApiKey: "sk" })).toBe("qwen");
+  it("lets gemini speak when following the analysis provider", () => {
+    expect(resolveTtsProvider("gemini", {})).toBe("gemini");
+  });
+  it("lets minimax speak when following the analysis provider", () => {
+    expect(resolveTtsProvider("minimax", {})).toBe("minimax");
   });
 });
 
@@ -38,6 +41,25 @@ describe("resolveTtsConfig", () => {
     });
     expect(c.baseURL).toBe("https://dashscope.aliyuncs.com/api/v1");
     expect(c.model).toBe("qwen3-tts-flash");
+  });
+  it("builds Gemini TTS config", () => {
+    const c = resolveTtsConfig("gemini", {
+      geminiApiKey: "sk",
+      geminiTtsVoice: "Puck",
+    });
+    expect(c.model).toBe("gemini-3.1-flash-tts-preview");
+    expect(c.voice).toBe("Puck");
+    expect(c.baseURL).toBe("https://generativelanguage.googleapis.com/v1beta");
+  });
+  it("builds MiniMax TTS config", () => {
+    const c = resolveTtsConfig("minimax", {
+      minimaxApiKey: "sk-mm",
+      minimaxTtsVoiceId: "English_WiseScholar",
+      minimaxTtsModel: "speech-2.8-hd",
+    });
+    expect(c.model).toBe("speech-2.8-hd");
+    expect(c.voice).toBe("English_WiseScholar");
+    expect(c.baseURL).toBe("https://api.minimaxi.com/v1");
   });
   it("builds MiMo TTS config (mimo-v2.5-tts, default Chloe voice)", () => {
     const c = resolveTtsConfig("mimo", { mimoApiKey: "tp", mimoTtsVoice: "Milo" });

@@ -4,7 +4,7 @@ import type { ChatConfig } from "./client";
 import type { PromptOptions } from "./prompt";
 import { isSingleWord } from "../lib/detect";
 import { analysisCacheKey } from "../lib/cache-key";
-import { resolveAnalysisConfig } from "./config";
+import { resolveAnalysisConfig, resolveAnalysisModel } from "./config";
 
 export interface AnalysisSinks {
   setLoading: (loading: boolean) => void;
@@ -50,7 +50,8 @@ export async function performAnalysis(
   sinks.setFailed(false);
   try {
     const isWord = isSingleWord(input);
-    const key = analysisCacheKey(input, provider, "GA");
+    const model = resolveAnalysisModel(provider, prefs);
+    const key = analysisCacheKey(input, provider, "GA", model);
     const cached = forceFresh ? null : io.readCache(key);
     if (cached) {
       if (isCurrent()) sinks.setAnalysis(cached);
