@@ -5,7 +5,9 @@ import {
   DEFAULT_TTS_VOICES,
   TTS_MODELS,
   TTS_PROVIDER_IDS,
+  TTS_VOICES,
   knownModelOrDefault,
+  knownVoiceOrDefault,
 } from "../llm/models";
 import type { TtsConfig, TtsPrefs } from "./types";
 
@@ -53,7 +55,11 @@ export function resolveTtsConfig(
     return {
       provider,
       apiKey: prefs.openaiApiKey,
-      voice: prefs.openaiTtsVoice || DEFAULT_TTS_VOICES.openai,
+      voice: knownVoiceOrDefault(
+        prefs.openaiTtsVoice,
+        TTS_VOICES.openai,
+        DEFAULT_TTS_VOICES.openai,
+      ),
       model: knownModelOrDefault(
         prefs.openaiTtsModel,
         TTS_MODELS.openai,
@@ -66,7 +72,11 @@ export function resolveTtsConfig(
     return {
       provider,
       apiKey: prefs.geminiApiKey,
-      voice: prefs.geminiTtsVoice || DEFAULT_TTS_VOICES.gemini,
+      voice: knownVoiceOrDefault(
+        prefs.geminiTtsVoice,
+        TTS_VOICES.gemini,
+        DEFAULT_TTS_VOICES.gemini,
+      ),
       model: knownModelOrDefault(
         prefs.geminiTtsModel,
         TTS_MODELS.gemini,
@@ -80,7 +90,11 @@ export function resolveTtsConfig(
     return {
       provider,
       apiKey: prefs.minimaxApiKey,
-      voice: prefs.minimaxTtsVoiceId || DEFAULT_TTS_VOICES.minimax,
+      voice: knownVoiceOrDefault(
+        prefs.minimaxTtsVoiceId,
+        TTS_VOICES.minimax,
+        DEFAULT_TTS_VOICES.minimax,
+      ),
       model: knownModelOrDefault(
         prefs.minimaxTtsModel,
         TTS_MODELS.minimax,
@@ -94,7 +108,11 @@ export function resolveTtsConfig(
     return {
       provider,
       apiKey: prefs.mimoApiKey,
-      voice: prefs.mimoTtsVoice || DEFAULT_TTS_VOICES.mimo,
+      voice: knownVoiceOrDefault(
+        prefs.mimoTtsVoice,
+        TTS_VOICES.mimo,
+        DEFAULT_TTS_VOICES.mimo,
+      ),
       model: knownModelOrDefault(
         prefs.mimoTtsModel,
         TTS_MODELS.mimo,
@@ -109,7 +127,11 @@ export function resolveTtsConfig(
   return {
     provider,
     apiKey: prefs.qwenApiKey,
-    voice: prefs.qwenTtsVoice || DEFAULT_TTS_VOICES.qwen,
+    voice: knownVoiceOrDefault(
+      prefs.qwenTtsVoice,
+      TTS_VOICES.qwen,
+      DEFAULT_TTS_VOICES.qwen,
+    ),
     model: knownModelOrDefault(
       prefs.qwenTtsModel,
       TTS_MODELS.qwen,

@@ -48,6 +48,7 @@ export interface AnalysisDetailProps {
   ttsProvider: TtsProviderName;
   ttsFollowsAnalysis: boolean;
   ttsModel: string;
+  ttsVoice: string;
   isLoading: boolean;
   activeIndex: number;
   sentenceTotal: number;
@@ -66,10 +67,12 @@ export interface AnalysisDetailProps {
   analysisModelOptions: PickerOption[];
   ttsProviderOptions: PickerOption<"follow-analysis" | TtsProviderName>[];
   ttsModelOptions: PickerOption[];
+  ttsVoiceOptions: PickerOption[];
   onSelectAnalysisProvider: (provider: ProviderName) => void;
   onSelectAnalysisModel: (model: string) => void;
   onSelectTtsProvider: (provider: "follow-analysis" | TtsProviderName) => void;
   onSelectTtsModel: (model: string) => void;
+  onSelectTtsVoice: (voice: string) => void;
   onRetryCurrent: () => void;
   onTranslateCurrent: () => void;
   onTranslatePage: () => void;
@@ -102,6 +105,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
     ttsProvider,
     ttsFollowsAnalysis,
     ttsModel,
+    ttsVoice,
     isLoading,
     activeIndex,
     sentenceTotal,
@@ -130,6 +134,7 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
             text={`${ttsProviderLabel}${ttsFollowsAnalysis ? " (auto)" : ""}`}
           />
           <Detail.Metadata.Label title="TTS Model" text={ttsModel} />
+          <Detail.Metadata.Label title="Voice" text={ttsVoice} />
           <Detail.Metadata.Label title="Accent" text="General American" />
           {sentenceTotal > 1 ? (
             <Detail.Metadata.Label
@@ -210,7 +215,10 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
                 ))}
               </ActionPanel.Submenu>
             ) : null}
-            <ActionPanel.Submenu title="Choose Voice Provider" icon={Icon.Play}>
+            <ActionPanel.Submenu
+              title="Choose Speech Provider"
+              icon={Icon.Play}
+            >
               {props.ttsProviderOptions.map((option) => (
                 <Action
                   key={option.value}
@@ -221,13 +229,28 @@ export function AnalysisDetail(props: AnalysisDetailProps) {
               ))}
             </ActionPanel.Submenu>
             {props.ttsModelOptions.length > 1 ? (
-              <ActionPanel.Submenu title="Choose Voice Model" icon={Icon.Gauge}>
+              <ActionPanel.Submenu
+                title="Choose Speech Model"
+                icon={Icon.Gauge}
+              >
                 {props.ttsModelOptions.map((option) => (
                   <Action
                     key={option.value}
                     title={option.title}
                     icon={option.selected ? Icon.CheckCircle : Icon.Circle}
                     onAction={() => props.onSelectTtsModel(option.value)}
+                  />
+                ))}
+              </ActionPanel.Submenu>
+            ) : null}
+            {props.ttsVoiceOptions.length > 1 ? (
+              <ActionPanel.Submenu title="Choose Voice" icon={Icon.Microphone}>
+                {props.ttsVoiceOptions.map((option) => (
+                  <Action
+                    key={option.value}
+                    title={option.title}
+                    icon={option.selected ? Icon.CheckCircle : Icon.Circle}
+                    onAction={() => props.onSelectTtsVoice(option.value)}
                   />
                 ))}
               </ActionPanel.Submenu>

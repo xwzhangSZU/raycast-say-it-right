@@ -88,41 +88,57 @@ export const DEFAULT_TTS_VOICES: Record<TtsProviderName, string> = {
   openai: "marin",
 };
 
-export const TTS_VOICES: Record<TtsProviderName, readonly string[]> = {
+export const TTS_VOICES: Record<TtsProviderName, readonly ModelOption[]> = {
   qwen: [
-    "Jennifer",
-    "Aiden",
-    "Neil",
-    "Elias",
-    "Cherry",
-    "Katerina",
-    "Ethan",
-    "Ryan",
-    "Nofish",
+    { id: "Jennifer", title: "Jennifer" },
+    { id: "Aiden", title: "Aiden" },
+    { id: "Neil", title: "Neil" },
+    { id: "Elias", title: "Elias" },
+    { id: "Cherry", title: "Cherry" },
+    { id: "Katerina", title: "Katerina" },
+    { id: "Ethan", title: "Ethan" },
+    { id: "Ryan", title: "Ryan" },
+    { id: "Nofish", title: "Nofish" },
   ],
   minimax: [
-    "English_expressive_narrator",
-    "English_CaptivatingStoryteller",
-    "English_Trustworth_Man",
-    "English_SereneWoman",
-    "English_WiseScholar",
+    {
+      id: "English_expressive_narrator",
+      title: "English Expressive Narrator",
+    },
+    {
+      id: "English_CaptivatingStoryteller",
+      title: "English Captivating Storyteller",
+    },
+    { id: "English_Trustworth_Man", title: "English Trustworthy Man" },
+    { id: "English_SereneWoman", title: "English Serene Woman" },
+    { id: "English_WiseScholar", title: "English Wise Scholar" },
   ],
-  mimo: ["Chloe", "Mia", "Milo", "Dean"],
-  gemini: ["Charon", "Iapetus", "Sulafat", "Puck"],
+  mimo: [
+    { id: "Chloe", title: "Chloe - English Female" },
+    { id: "Mia", title: "Mia - English Female" },
+    { id: "Milo", title: "Milo - English Male" },
+    { id: "Dean", title: "Dean - English Male" },
+  ],
+  gemini: [
+    { id: "Charon", title: "Charon" },
+    { id: "Iapetus", title: "Iapetus" },
+    { id: "Sulafat", title: "Sulafat" },
+    { id: "Puck", title: "Puck" },
+  ],
   openai: [
-    "marin",
-    "cedar",
-    "coral",
-    "alloy",
-    "ash",
-    "ballad",
-    "echo",
-    "fable",
-    "nova",
-    "onyx",
-    "sage",
-    "shimmer",
-    "verse",
+    { id: "marin", title: "Marin" },
+    { id: "cedar", title: "Cedar" },
+    { id: "coral", title: "Coral" },
+    { id: "alloy", title: "Alloy" },
+    { id: "ash", title: "Ash" },
+    { id: "ballad", title: "Ballad" },
+    { id: "echo", title: "Echo" },
+    { id: "fable", title: "Fable" },
+    { id: "nova", title: "Nova" },
+    { id: "onyx", title: "Onyx" },
+    { id: "sage", title: "Sage" },
+    { id: "shimmer", title: "Shimmer" },
+    { id: "verse", title: "Verse" },
   ],
 };
 
@@ -142,3 +158,5 @@ export function knownModelOrDefault(
   const trimmed = value?.trim() ?? "";
   return options.some((option) => option.id === trimmed) ? trimmed : fallback;
 }
+
+export const knownVoiceOrDefault = knownModelOrDefault;
