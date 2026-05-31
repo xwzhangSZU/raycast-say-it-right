@@ -114,6 +114,15 @@ describe("resolveAnalysisConfig", () => {
     expect(pro.authHeader).toBe("api-key");
     expect(pro.extraBody).toEqual({ enable_thinking: false });
   });
+  it("routes Token Plan MiMo keys away from stale pay-as-you-go bases", () => {
+    const c = resolveAnalysisConfig("mimo", {
+      mimoApiKey: "tp-x",
+      mimoBaseURL: "https://api.xiaomimimo.com/v1",
+    });
+    expect(c.baseURL).toBe(MIMO_BASE);
+    expect(c.apiProtocol).toBe("anthropic");
+    expect(c.authHeader).toBeUndefined();
+  });
   it("throws MissingKeyError when key absent", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("qwen", {})).toThrow(MissingKeyError);

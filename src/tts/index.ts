@@ -1,5 +1,5 @@
 import type { ProviderName, TtsProviderName } from "../llm/config";
-import { MissingKeyError, MIMO_BASE } from "../llm/config";
+import { MissingKeyError, resolveMimoBaseURL } from "../llm/config";
 import {
   DEFAULT_TTS_MODELS,
   DEFAULT_TTS_VOICES,
@@ -100,7 +100,9 @@ export function resolveTtsConfig(
         TTS_MODELS.mimo,
         DEFAULT_TTS_MODELS.mimo,
       ),
-      baseURL: mimoTtsBaseURL(prefs.mimoBaseURL?.trim() || MIMO_BASE),
+      baseURL: mimoTtsBaseURL(
+        resolveMimoBaseURL(prefs.mimoApiKey, prefs.mimoBaseURL),
+      ),
     };
   }
   if (!prefs.qwenApiKey) throw new MissingKeyError("qwen");

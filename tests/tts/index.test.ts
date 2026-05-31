@@ -78,6 +78,13 @@ describe("resolveTtsConfig", () => {
     expect(c.voice).toBe("Milo");
     expect(c.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
   });
+  it("routes Token Plan MiMo TTS away from stale pay-as-you-go bases", () => {
+    const c = resolveTtsConfig("mimo", {
+      mimoApiKey: "tp-x",
+      mimoBaseURL: "https://api.xiaomimimo.com/v1",
+    });
+    expect(c.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
+  });
   it("maps MiMo Anthropic bases to matching TTS /v1 bases", () => {
     expect(
       mimoTtsBaseURL("https://token-plan-cn.xiaomimimo.com/anthropic"),
