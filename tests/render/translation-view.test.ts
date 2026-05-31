@@ -20,4 +20,22 @@ describe("renderTranslationMarkdown", () => {
     expect(out).toContain("> hello");
     expect(out).toContain("Could not translate");
   });
+
+  it("renders intent-expression labels", () => {
+    const out = renderTranslationMarkdown(
+      "我想委婉地催一下文件。",
+      {
+        translation: "Could you send me the file when you get a chance?",
+        targetLanguageTitle: "English",
+      },
+      {
+        title: "Natural Expression",
+        sourceTitle: "Chinese Intent",
+      },
+    );
+
+    expect(out).toContain("# Natural Expression");
+    expect(out).toContain("## Chinese Intent");
+    expect(out).toContain("## English");
+  });
 });

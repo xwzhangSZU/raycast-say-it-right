@@ -26,9 +26,23 @@
     },
     {
       "name": "translate-selection",
-      "title": "Translate Selection",
+      "title": "Translate Selected Text",
       "subtitle": "Say It Right",
-      "description": "Translate selected or pasted text with the configured provider.",
+      "description": "Turn selected Chinese text into natural foreign-language expression.",
+      "mode": "view"
+    },
+    {
+      "name": "translate-clipboard",
+      "title": "Translate Clipboard",
+      "subtitle": "Say It Right",
+      "description": "Turn clipboard Chinese text into natural foreign-language expression.",
+      "mode": "view"
+    },
+    {
+      "name": "translate-intent",
+      "title": "Translate Chinese Intent",
+      "subtitle": "Say It Right",
+      "description": "Write a natural foreign-language expression from a Chinese intention.",
       "mode": "view"
     }
   ],

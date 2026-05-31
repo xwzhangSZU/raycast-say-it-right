@@ -84,6 +84,10 @@ declare namespace Preferences {
   export type PracticeSentence = ExtensionPreferences & {}
   /** Preferences accessible in the `translate-selection` command */
   export type TranslateSelection = ExtensionPreferences & {}
+  /** Preferences accessible in the `translate-clipboard` command */
+  export type TranslateClipboard = ExtensionPreferences & {}
+  /** Preferences accessible in the `translate-intent` command */
+  export type TranslateIntent = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -93,5 +97,9 @@ declare namespace Arguments {
   export type PracticeSentence = {}
   /** Arguments passed to the `translate-selection` command */
   export type TranslateSelection = {}
+  /** Arguments passed to the `translate-clipboard` command */
+  export type TranslateClipboard = {}
+  /** Arguments passed to the `translate-intent` command */
+  export type TranslateIntent = {}
 }
 

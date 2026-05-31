@@ -14,6 +14,7 @@ export function translationCacheKey(parts: {
   provider: string;
   model: string;
   targetLanguage: string;
+  promptMode?: string;
 }): string {
   return createHash("sha1")
     .update(JSON.stringify({ ...parts, text: parts.text.trim() }))

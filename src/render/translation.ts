@@ -4,18 +4,32 @@ export interface TranslationRenderState {
   failed?: boolean;
 }
 
+export interface TranslationRenderOptions {
+  title?: string;
+  sourceTitle?: string;
+  emptyLabel?: string;
+}
+
 export function renderTranslationMarkdown(
   source: string,
   state: TranslationRenderState,
+  options: TranslationRenderOptions = {},
 ): string {
-  const lines = ["# Translation", "", "## Source", "", quoteBlock(source), ""];
+  const lines = [
+    `# ${options.title ?? "Translation"}`,
+    "",
+    `## ${options.sourceTitle ?? "Source"}`,
+    "",
+    quoteBlock(source),
+    "",
+  ];
   lines.push(`## ${state.targetLanguageTitle ?? "Target"}`);
   lines.push("");
   if (state.translation) {
     lines.push(state.translation);
   } else if (state.failed) {
     lines.push(
-      "_Could not translate this text. Use Refresh Translation to try again._",
+      `_${options.emptyLabel ?? "Could not translate this text. Use Refresh Translation to try again."}_`,
     );
   } else {
     lines.push("_Translating..._");
