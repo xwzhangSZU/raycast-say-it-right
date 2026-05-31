@@ -23,8 +23,8 @@ export default function Command() {
       <TranslateView
         text={text}
         mode="express-intent"
-        title="Natural Expression"
-        sourceTitle="Selected Intent"
+        title="Translation"
+        sourceTitle="Selection"
       />
     );
   }

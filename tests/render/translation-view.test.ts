@@ -29,13 +29,13 @@ describe("renderTranslationMarkdown", () => {
         targetLanguageTitle: "English",
       },
       {
-        title: "Natural Expression",
-        sourceTitle: "Chinese Intent",
+        title: "Translation",
+        sourceTitle: "What You Mean",
       },
     );
 
-    expect(out).toContain("# Natural Expression");
-    expect(out).toContain("## Chinese Intent");
+    expect(out).toContain("# Translation");
+    expect(out).toContain("## What You Mean");
     expect(out).toContain("## English");
   });
 });

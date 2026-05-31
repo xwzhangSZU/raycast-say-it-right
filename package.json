@@ -26,23 +26,23 @@
     },
     {
       "name": "translate-selection",
-      "title": "Translate Selected Text",
+      "title": "Translate Selection",
       "subtitle": "Say It Right",
-      "description": "Turn selected Chinese text into natural foreign-language expression.",
+      "description": "Translate the selected text into natural target-language wording.",
       "mode": "view"
     },
     {
       "name": "translate-clipboard",
       "title": "Translate Clipboard",
       "subtitle": "Say It Right",
-      "description": "Turn clipboard Chinese text into natural foreign-language expression.",
+      "description": "Translate clipboard text into natural target-language wording.",
       "mode": "view"
     },
     {
       "name": "translate-intent",
-      "title": "Translate Chinese Intent",
+      "title": "Translate What I Mean",
       "subtitle": "Say It Right",
-      "description": "Write a natural foreign-language expression from a Chinese intention.",
+      "description": "Type what you mean in Chinese and get natural target-language wording.",
       "mode": "view"
     }
   ],

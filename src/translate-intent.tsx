@@ -11,8 +11,8 @@ export default function Command() {
       <TranslateView
         text={intent}
         mode="express-intent"
-        title="Natural Expression"
-        sourceTitle="Chinese Intent"
+        title="Translation"
+        sourceTitle="What You Mean"
       />
     );
   }
@@ -20,9 +20,9 @@ export default function Command() {
   return (
     <TextInputForm
       onSubmit={(text) => setIntent(text.trim())}
-      submitTitle="Express"
+      submitTitle="Translate"
       submitIcon={Icon.Message}
-      title="Chinese intent"
+      title="What you mean"
       placeholder="用中文写下你想表达的意思..."
     />
   );
