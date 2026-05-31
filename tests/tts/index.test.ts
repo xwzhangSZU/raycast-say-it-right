@@ -5,6 +5,7 @@ import {
   buildTtsInstructions,
   mimoTtsBaseURL,
 } from "../../src/tts/index";
+import { TTS_VOICES } from "../../src/llm/models";
 
 describe("resolveTtsProvider", () => {
   it("follows the analysis provider by default", () => {
@@ -77,6 +78,20 @@ describe("resolveTtsConfig", () => {
     expect(c.model).toBe("mimo-v2.5-tts");
     expect(c.voice).toBe("Milo");
     expect(c.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
+  });
+  it("keeps MiMo on documented English preset voices", () => {
+    expect(TTS_VOICES.mimo.map((option) => option.id)).toEqual([
+      "Chloe",
+      "Mia",
+      "Milo",
+      "Dean",
+    ]);
+    expect(
+      resolveTtsConfig("mimo", {
+        mimoApiKey: "tp",
+        mimoTtsVoice: "mimo_default",
+      }).voice,
+    ).toBe("Chloe");
   });
   it("routes Token Plan MiMo TTS away from stale pay-as-you-go bases", () => {
     const c = resolveTtsConfig("mimo", {

@@ -124,12 +124,13 @@ function TranslateViewInner({
       analysisModels?: AnalysisModelMap;
     }) => {
       writeRuntimeSelection({
+        ...storedSelection,
         analysisProvider: provider,
         analysisModels,
         ...next,
       });
     },
-    [analysisModels, provider],
+    [analysisModels, provider, storedSelection],
   );
 
   const runTranslation = useCallback(

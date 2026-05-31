@@ -9,12 +9,15 @@ import {
 import {
   ANALYSIS_MODELS,
   DEFAULT_TTS_MODELS,
+  DEFAULT_TTS_VOICES,
   PROVIDER_IDS,
   TTS_MODELS,
   TTS_PROVIDER_IDS,
+  TTS_VOICES,
   isProviderName,
   isTtsProviderName,
   knownModelOrDefault,
+  knownVoiceOrDefault,
 } from "../llm/models";
 import type { TtsPrefs } from "../tts/types";
 
@@ -23,12 +26,14 @@ const STORAGE_KEY = "runtime-model-selection-v1";
 export type TtsProviderChoice = "follow-analysis" | TtsProviderName;
 export type AnalysisModelMap = Partial<Record<ProviderName, string>>;
 export type TtsModelMap = Partial<Record<TtsProviderName, string>>;
+export type TtsVoiceMap = Partial<Record<TtsProviderName, string>>;
 
 export interface RuntimeSelection {
   analysisProvider?: ProviderName;
   analysisModels?: AnalysisModelMap;
   ttsProvider?: TtsProviderChoice;
   ttsModels?: TtsModelMap;
+  ttsVoices?: TtsVoiceMap;
 }
 
 export async function readRuntimeSelection(): Promise<RuntimeSelection> {
@@ -101,6 +106,22 @@ export function initialTtsModels(
   ) as TtsModelMap;
 }
 
+export function initialTtsVoices(
+  prefs: TtsPrefs,
+  stored: RuntimeSelection,
+): TtsVoiceMap {
+  return Object.fromEntries(
+    TTS_PROVIDER_IDS.map((provider) => [
+      provider,
+      knownVoiceOrDefault(
+        stored.ttsVoices?.[provider],
+        TTS_VOICES[provider],
+        defaultTtsVoice(provider, prefs),
+      ),
+    ]),
+  ) as TtsVoiceMap;
+}
+
 export function applyAnalysisModel(
   prefs: TtsPrefs,
   provider: ProviderName,
@@ -119,15 +140,21 @@ export function applyTtsSelection(
   prefs: TtsPrefs,
   providerChoice: TtsProviderChoice,
   models: TtsModelMap,
+  voices: TtsVoiceMap,
 ): TtsPrefs {
   return {
     ...prefs,
     ttsProvider: providerChoice,
     openaiTtsModel: models.openai ?? prefs.openaiTtsModel,
+    openaiTtsVoice: voices.openai ?? prefs.openaiTtsVoice,
     qwenTtsModel: models.qwen ?? prefs.qwenTtsModel,
+    qwenTtsVoice: voices.qwen ?? prefs.qwenTtsVoice,
     minimaxTtsModel: models.minimax ?? prefs.minimaxTtsModel,
+    minimaxTtsVoiceId: voices.minimax ?? prefs.minimaxTtsVoiceId,
     geminiTtsModel: models.gemini ?? prefs.geminiTtsModel,
+    geminiTtsVoice: voices.gemini ?? prefs.geminiTtsVoice,
     mimoTtsModel: models.mimo ?? prefs.mimoTtsModel,
+    mimoTtsVoice: voices.mimo ?? prefs.mimoTtsVoice,
   };
 }
 
@@ -167,10 +194,51 @@ function defaultTtsModel(provider: TtsProviderName, prefs: TtsPrefs): string {
   );
 }
 
+export function defaultTtsVoice(
+  provider: TtsProviderName,
+  prefs: TtsPrefs,
+): string {
+  if (provider === "openai") {
+    return knownVoiceOrDefault(
+      prefs.openaiTtsVoice,
+      TTS_VOICES.openai,
+      DEFAULT_TTS_VOICES.openai,
+    );
+  }
+  if (provider === "qwen") {
+    return knownVoiceOrDefault(
+      prefs.qwenTtsVoice,
+      TTS_VOICES.qwen,
+      DEFAULT_TTS_VOICES.qwen,
+    );
+  }
+  if (provider === "minimax") {
+    return knownVoiceOrDefault(
+      prefs.minimaxTtsVoiceId,
+      TTS_VOICES.minimax,
+      DEFAULT_TTS_VOICES.minimax,
+    );
+  }
+  if (provider === "gemini") {
+    return knownVoiceOrDefault(
+      prefs.geminiTtsVoice,
+      TTS_VOICES.gemini,
+      DEFAULT_TTS_VOICES.gemini,
+    );
+  }
+  return knownVoiceOrDefault(
+    prefs.mimoTtsVoice,
+    TTS_VOICES.mimo,
+    DEFAULT_TTS_VOICES.mimo,
+  );
+}
+
 function normalizeRuntimeSelection(value: unknown): RuntimeSelection {
+  if (!value || typeof value !== "object") return {};
   const data = value as RuntimeSelection;
   const analysisModels: AnalysisModelMap = {};
   const ttsModels: TtsModelMap = {};
+  const ttsVoices: TtsVoiceMap = {};
 
   for (const provider of PROVIDER_IDS) {
     const model = data.analysisModels?.[provider];
@@ -190,6 +258,14 @@ function normalizeRuntimeSelection(value: unknown): RuntimeSelection {
     ) {
       ttsModels[provider] = model;
     }
+
+    const voice = data.ttsVoices?.[provider];
+    if (
+      typeof voice === "string" &&
+      TTS_VOICES[provider].some((option) => option.id === voice)
+    ) {
+      ttsVoices[provider] = voice;
+    }
   }
 
   return {
@@ -204,5 +280,6 @@ function normalizeRuntimeSelection(value: unknown): RuntimeSelection {
         ? data.ttsProvider
         : undefined,
     ttsModels,
+    ttsVoices,
   };
 }

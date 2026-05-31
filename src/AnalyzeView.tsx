@@ -15,6 +15,7 @@ import {
   PROVIDER_IDS,
   TTS_MODELS,
   TTS_PROVIDER_IDS,
+  TTS_VOICES,
 } from "./llm/models";
 import { analyze } from "./llm/analyze";
 import { resolveTranslationTarget, translateText } from "./llm/translate";
@@ -34,16 +35,19 @@ import { readAnalysisCache, writeAnalysisCache } from "./lib/cache";
 import {
   applyAnalysisModel,
   applyTtsSelection,
+  defaultTtsVoice,
   initialAnalysisModels,
   initialAnalysisProvider,
   initialTtsModels,
   initialTtsProviderChoice,
+  initialTtsVoices,
   readRuntimeSelection,
   writeRuntimeSelection,
   type AnalysisModelMap,
   type RuntimeSelection,
   type TtsModelMap,
   type TtsProviderChoice,
+  type TtsVoiceMap,
 } from "./lib/runtime-selection";
 import {
   AnalysisDetail,
@@ -129,6 +133,9 @@ function AnalyzeViewInner({
   const [ttsModels, setTtsModels] = useState<TtsModelMap>(() =>
     initialTtsModels(prefs, storedSelection),
   );
+  const [ttsVoices, setTtsVoices] = useState<TtsVoiceMap>(() =>
+    initialTtsVoices(prefs, storedSelection),
+  );
   const [records, setRecords] = useState<AnalysisRecords>({});
   const [translations, setTranslations] = useState<TranslationRecords>({});
   const genRef = useRef(0);
@@ -155,9 +162,10 @@ function AnalyzeViewInner({
         applyAnalysisModel(prefs, prov, model),
         ttsProviderChoice,
         ttsModels,
+        ttsVoices,
       );
     },
-    [analysisModels, prefs, ttsModels, ttsProviderChoice],
+    [analysisModels, prefs, ttsModels, ttsProviderChoice, ttsVoices],
   );
   const activePrefs = useMemo(
     () => prefsForProvider(provider),
@@ -167,6 +175,8 @@ function AnalyzeViewInner({
   const ttsProvider = resolveTtsProvider(provider, activePrefs);
   const ttsModel =
     ttsModels[ttsProvider] ?? TTS_MODELS[ttsProvider][0]?.id ?? "";
+  const ttsVoice =
+    ttsVoices[ttsProvider] ?? defaultTtsVoice(ttsProvider, prefs);
   const availableTtsProviders = useMemo<TtsProviderName[]>(() => {
     const list = getAvailableTtsProviders(activePrefs);
     return list.length > 0 ? list : [...TTS_PROVIDER_IDS];
@@ -179,6 +189,7 @@ function AnalyzeViewInner({
         analysisModels?: AnalysisModelMap;
         ttsProvider?: TtsProviderChoice;
         ttsModels?: TtsModelMap;
+        ttsVoices?: TtsVoiceMap;
       },
     ) => {
       writeRuntimeSelection({
@@ -186,10 +197,11 @@ function AnalyzeViewInner({
         analysisModels,
         ttsProvider: ttsProviderChoice,
         ttsModels,
+        ttsVoices,
         ...next,
       });
     },
-    [analysisModels, provider, ttsModels, ttsProviderChoice],
+    [analysisModels, provider, ttsModels, ttsProviderChoice, ttsVoices],
   );
 
   const setRecord = useCallback((index: number, record: AnalysisRecord) => {
@@ -482,6 +494,15 @@ function AnalyzeViewInner({
     [persistSelection, ttsModels, ttsProvider],
   );
 
+  const selectTtsVoice = useCallback(
+    (voice: string) => {
+      const nextVoices = { ...ttsVoices, [ttsProvider]: voice };
+      setTtsVoices(nextVoices);
+      persistSelection({ ttsVoices: nextVoices });
+    },
+    [persistSelection, ttsProvider, ttsVoices],
+  );
+
   const nextProvider =
     availableProviders.length > 1
       ? availableProviders[
@@ -549,6 +570,7 @@ function AnalyzeViewInner({
       ttsProvider={ttsProvider}
       ttsFollowsAnalysis={ttsProviderChoice === "follow-analysis"}
       ttsModel={ttsModel}
+      ttsVoice={ttsVoice}
       activeIndex={activeIndex}
       sentenceTotal={sentences.length}
       pageStart={pageStart}
@@ -588,10 +610,16 @@ function AnalyzeViewInner({
         title: option.title,
         selected: option.id === ttsModel,
       }))}
+      ttsVoiceOptions={TTS_VOICES[ttsProvider].map((option) => ({
+        value: option.id,
+        title: option.title,
+        selected: option.id === ttsVoice,
+      }))}
       onSelectAnalysisProvider={selectAnalysisProvider}
       onSelectAnalysisModel={selectAnalysisModel}
       onSelectTtsProvider={selectTtsProvider}
       onSelectTtsModel={selectTtsModel}
+      onSelectTtsVoice={selectTtsVoice}
       onRetryCurrent={onRetryCurrent}
       onTranslateCurrent={onTranslateCurrent}
       onTranslatePage={onTranslatePage}
