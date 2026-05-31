@@ -40,8 +40,10 @@ The coaching commands open the same practice view, with every action available i
 | Repeat last                       | `⌘R`          |
 | Next / previous sentence          | `⌘⇧N` / `⌘⇧P` |
 | Save model audio                  | `⌘⇧E`         |
-| Switch provider                   | `⌘⇧O`         |
+| Switch analysis provider          | `⌘⇧O`         |
 | Translate sentence / page         | `⌘T` / `⌘⇧T`  |
+
+The action panel also includes direct pickers for **analysis provider**, **analysis model**, **voice provider**, and **voice model**. Runtime choices are remembered, so switching from OpenAI to Qwen once keeps Qwen as the next starting point.
 
 ## Setup
 
@@ -53,7 +55,7 @@ Open the extension's preferences and add **at least one** API key:
 - **Gemini** — analysis (`gemini-3.5-flash`) and speech (`gemini-3.1-flash-tts-preview`).
 - **OpenAI** — analysis (`gpt-5.5`) and speech (`gpt-4o-mini-tts`).
 
-Whichever key you fill is used automatically; if you add several, choose a preferred default. You can also pick per-provider analysis models, TTS models, voices, translation target, sentences per page, and the shadowing‑loop count and gap.
+Whichever key you fill is used automatically; if you add several, choose preferred defaults at the top of Preferences. Preferences keep only durable setup choices such as keys, base URLs, multi-option models, voices, translation target, sentences per page, and the shadowing-loop count and gap. Per-run provider/model switching lives in the action panel.
 
 ## Visualization legend
 

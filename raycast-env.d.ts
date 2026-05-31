@@ -8,14 +8,12 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Analysis Provider - Preferred provider when multiple analysis keys are set. If only one analysis key is filled, that provider is used automatically. */
+  /** Default Analysis Provider - Initial provider for analysis and translation. You can change provider and model per run from the Action Panel. */
   "defaultAnalysisProvider": "qwen" | "minimax" | "mimo" | "gemini" | "openai",
+  /** Default TTS Provider - Initial provider for model audio. Follow Analysis Provider uses the analysis provider when its TTS key is set, otherwise the first configured TTS provider. */
+  "ttsProvider": "follow-analysis" | "qwen" | "minimax" | "mimo" | "gemini" | "openai",
   /** OpenAI API Key - Used for OpenAI analysis and TTS. */
   "openaiApiKey"?: string,
-  /** OpenAI Analysis Model - OpenAI model used for pronunciation analysis. */
-  "openaiAnalysisModel": "gpt-5.5",
-  /** OpenAI TTS Model - OpenAI model used for read-aloud. */
-  "openaiTtsModel": "gpt-4o-mini-tts",
   /** OpenAI TTS Voice - Voice for OpenAI TTS. */
   "openaiTtsVoice": "marin" | "cedar" | "coral" | "alloy" | "ash" | "ballad" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse",
   /** DashScope API Key - Used only for Qwen-TTS. Qwen analysis uses the Token Plan key below. */
@@ -36,8 +34,6 @@ type ExtensionPreferences = {
   "minimaxApiKey"?: string,
   /** MiniMax Analysis Base URL - MiniMax Token Plan Anthropic-compatible endpoint (ANTHROPIC_BASE_URL). */
   "minimaxBaseURL": string,
-  /** MiniMax Analysis Model - MiniMax model used for pronunciation analysis. */
-  "minimaxAnalysisModel": "MiniMax-M2.7-highspeed",
   /** MiniMax TTS Base URL - MiniMax TTS base URL. */
   "minimaxTtsBaseURL": string,
   /** MiniMax TTS Model - MiniMax TTS model used for read-aloud. */
@@ -46,10 +42,6 @@ type ExtensionPreferences = {
   "minimaxTtsVoiceId": "English_expressive_narrator" | "English_CaptivatingStoryteller" | "English_Trustworth_Man" | "English_SereneWoman" | "English_WiseScholar",
   /** Gemini API Key - Google AI Studio key for Gemini analysis and TTS. */
   "geminiApiKey"?: string,
-  /** Gemini Analysis Model - Gemini model used for pronunciation analysis. */
-  "geminiAnalysisModel": "gemini-3.5-flash",
-  /** Gemini TTS Model - Gemini TTS model used for read-aloud. */
-  "geminiTtsModel": "gemini-3.1-flash-tts-preview",
   /** Gemini TTS Voice - Voice for Gemini TTS. */
   "geminiTtsVoice": "Charon" | "Iapetus" | "Sulafat" | "Puck",
   /** MiMo (Xiaomi) API Key - Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS. */
@@ -58,12 +50,8 @@ type ExtensionPreferences = {
   "mimoBaseURL": string,
   /** MiMo Analysis Model - MiMo chat model for analysis (thinking is disabled for speed/determinism). */
   "mimoAnalysisModel": "mimo-v2.5" | "mimo-v2.5-pro",
-  /** MiMo TTS Model - MiMo TTS model used for read-aloud. */
-  "mimoTtsModel": "mimo-v2.5-tts",
   /** MiMo TTS Voice - Voice for MiMo TTS (English voices). */
   "mimoTtsVoice": "Chloe" | "Mia" | "Milo" | "Dean",
-  /** TTS Provider - Which provider synthesizes audio. */
-  "ttsProvider": "follow-analysis" | "qwen" | "minimax" | "mimo" | "gemini" | "openai",
   /** Translation Target - Target language for Translate actions. Auto translates Chinese to English and other text to Simplified Chinese. */
   "translationTargetLanguage": "auto" | "zh-Hans" | "zh-Hant" | "en" | "ja" | "ko" | "fr" | "de" | "es" | "it" | "pt" | "ru" | "ar" | "hi" | "vi" | "th" | "id" | "tr" | "nl" | "pl",
   /** Sentences Per Page - How many sentences are shown and analyzed together for long passages. */

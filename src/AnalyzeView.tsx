@@ -3,14 +3,19 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { ProsodyAnalysis } from "./types";
 import {
   getAvailableAnalysisProviders,
-  pickInitialProvider,
   PROVIDER_LABELS,
   resolveAnalysisConfig,
   resolveAnalysisModel,
   type ProviderName,
+  type TtsProviderName,
 } from "./llm/config";
 import type { ChatConfig } from "./llm/client";
-import { PROVIDER_IDS } from "./llm/models";
+import {
+  ANALYSIS_MODELS,
+  PROVIDER_IDS,
+  TTS_MODELS,
+  TTS_PROVIDER_IDS,
+} from "./llm/models";
 import { analyze } from "./llm/analyze";
 import { resolveTranslationTarget, translateText } from "./llm/translate";
 import type { PromptOptions } from "./llm/prompt";
@@ -27,9 +32,24 @@ import { getPrefs } from "./lib/preferences";
 import { reportError } from "./lib/errors";
 import { readAnalysisCache, writeAnalysisCache } from "./lib/cache";
 import {
+  applyAnalysisModel,
+  applyTtsSelection,
+  initialAnalysisModels,
+  initialAnalysisProvider,
+  initialTtsModels,
+  initialTtsProviderChoice,
+  readRuntimeSelection,
+  writeRuntimeSelection,
+  type AnalysisModelMap,
+  type RuntimeSelection,
+  type TtsModelMap,
+  type TtsProviderChoice,
+} from "./lib/runtime-selection";
+import {
   AnalysisDetail,
   AnalysisPlaceholder,
 } from "./components/AnalysisDetail";
+import { getAvailableTtsProviders, resolveTtsProvider } from "./tts/index";
 import { speak, speakLoop, exportAudio, repeatLast } from "./tts/speak";
 
 interface AnalysisRecord {
@@ -52,6 +72,41 @@ type TranslationRecords = Record<number, TranslationRecord | undefined>;
 
 export function AnalyzeView({ text }: { text: string }) {
   const prefs = useMemo(() => getPrefs(), []);
+  const [storedSelection, setStoredSelection] =
+    useState<RuntimeSelection | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void readRuntimeSelection().then((selection) => {
+      if (mounted) setStoredSelection(selection);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (storedSelection === null) {
+    return <AnalysisPlaceholder isLoading={true} />;
+  }
+
+  return (
+    <AnalyzeViewInner
+      text={text}
+      prefs={prefs}
+      storedSelection={storedSelection}
+    />
+  );
+}
+
+function AnalyzeViewInner({
+  text,
+  prefs,
+  storedSelection,
+}: {
+  text: string;
+  prefs: Preferences;
+  storedSelection: RuntimeSelection;
+}) {
   const sentences = useMemo(() => {
     const s = splitSentences(text);
     return s.length > 0 ? s : [text.trim()];
@@ -63,7 +118,16 @@ export function AnalyzeView({ text }: { text: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [pageStart, setPageStart] = useState(0);
   const [provider, setProvider] = useState<ProviderName>(
-    pickInitialProvider(prefs),
+    initialAnalysisProvider(prefs, storedSelection),
+  );
+  const [analysisModels, setAnalysisModels] = useState<AnalysisModelMap>(() =>
+    initialAnalysisModels(prefs, storedSelection),
+  );
+  const [ttsProviderChoice, setTtsProviderChoice] = useState<TtsProviderChoice>(
+    () => initialTtsProviderChoice(prefs, storedSelection),
+  );
+  const [ttsModels, setTtsModels] = useState<TtsModelMap>(() =>
+    initialTtsModels(prefs, storedSelection),
   );
   const [records, setRecords] = useState<AnalysisRecords>({});
   const [translations, setTranslations] = useState<TranslationRecords>({});
@@ -84,6 +148,49 @@ export function AnalyzeView({ text }: { text: string }) {
     const list = getAvailableAnalysisProviders(prefs);
     return list.length > 0 ? list : [...PROVIDER_IDS];
   }, [prefs]);
+  const prefsForProvider = useCallback(
+    (prov: ProviderName) => {
+      const model = analysisModels[prov] ?? resolveAnalysisModel(prov, prefs);
+      return applyTtsSelection(
+        applyAnalysisModel(prefs, prov, model),
+        ttsProviderChoice,
+        ttsModels,
+      );
+    },
+    [analysisModels, prefs, ttsModels, ttsProviderChoice],
+  );
+  const activePrefs = useMemo(
+    () => prefsForProvider(provider),
+    [prefsForProvider, provider],
+  );
+  const analysisModel = resolveAnalysisModel(provider, activePrefs);
+  const ttsProvider = resolveTtsProvider(provider, activePrefs);
+  const ttsModel =
+    ttsModels[ttsProvider] ?? TTS_MODELS[ttsProvider][0]?.id ?? "";
+  const availableTtsProviders = useMemo<TtsProviderName[]>(() => {
+    const list = getAvailableTtsProviders(activePrefs);
+    return list.length > 0 ? list : [...TTS_PROVIDER_IDS];
+  }, [activePrefs]);
+
+  const persistSelection = useCallback(
+    (
+      next: Partial<RuntimeSelection> & {
+        analysisProvider?: ProviderName;
+        analysisModels?: AnalysisModelMap;
+        ttsProvider?: TtsProviderChoice;
+        ttsModels?: TtsModelMap;
+      },
+    ) => {
+      writeRuntimeSelection({
+        analysisProvider: provider,
+        analysisModels,
+        ttsProvider: ttsProviderChoice,
+        ttsModels,
+        ...next,
+      });
+    },
+    [analysisModels, provider, ttsModels, ttsProviderChoice],
+  );
 
   const setRecord = useCallback((index: number, record: AnalysisRecord) => {
     setRecords((prev) => ({ ...prev, [index]: record }));
@@ -131,7 +238,8 @@ export function AnalyzeView({ text }: { text: string }) {
   const analyzeIndexes = useCallback(
     async (indexes: number[], prov: ProviderName, forceFresh = false) => {
       const generation = ++genRef.current;
-      const model = resolveAnalysisModel(prov, prefs);
+      const scopedPrefs = prefsForProvider(prov);
+      const model = resolveAnalysisModel(prov, scopedPrefs);
       const misses: { index: number; key: string }[] = [];
 
       for (const index of indexes) {
@@ -153,7 +261,7 @@ export function AnalyzeView({ text }: { text: string }) {
 
       let cfg: ChatConfig;
       try {
-        cfg = resolveAnalysisConfig(prov, prefs);
+        cfg = resolveAnalysisConfig(prov, scopedPrefs);
       } catch (err) {
         misses.forEach(({ index }) =>
           setRecord(index, { isLoading: false, failed: true }),
@@ -167,7 +275,7 @@ export function AnalyzeView({ text }: { text: string }) {
         await analyzeOne(index, cfg, generation, key);
       }
     },
-    [analyzeOne, prefs, sentences, setRecord],
+    [analyzeOne, prefsForProvider, sentences, setRecord],
   );
 
   useEffect(() => {
@@ -177,7 +285,7 @@ export function AnalyzeView({ text }: { text: string }) {
   const translateIndexes = useCallback(
     async (indexes: number[], forceFresh = false) => {
       const generation = ++translationGenRef.current;
-      const model = resolveAnalysisModel(provider, prefs);
+      const model = resolveAnalysisModel(provider, activePrefs);
       const misses: { index: number; key: string; targetLanguage: string }[] =
         [];
 
@@ -217,7 +325,7 @@ export function AnalyzeView({ text }: { text: string }) {
 
       let cfg: ChatConfig;
       try {
-        cfg = resolveAnalysisConfig(provider, prefs);
+        cfg = resolveAnalysisConfig(provider, activePrefs);
       } catch (err) {
         misses.forEach(({ index }) =>
           setTranslationRecord(index, { isLoading: false, failed: true }),
@@ -247,7 +355,13 @@ export function AnalyzeView({ text }: { text: string }) {
         }
       }
     },
-    [prefs, provider, sentences, setTranslationRecord],
+    [
+      activePrefs,
+      prefs.translationTargetLanguage,
+      provider,
+      sentences,
+      setTranslationRecord,
+    ],
   );
 
   const speakAt = useCallback(
@@ -258,7 +372,7 @@ export function AnalyzeView({ text }: { text: string }) {
           title: label,
         });
         try {
-          await speak(current, provider, prefs, rate);
+          await speak(current, provider, activePrefs, rate);
           toast.style = Toast.Style.Success;
           toast.title = "Played";
         } catch (err) {
@@ -266,7 +380,7 @@ export function AnalyzeView({ text }: { text: string }) {
         }
       })();
     },
-    [current, provider, prefs],
+    [activePrefs, current, provider],
   );
 
   const onLoop = useCallback(() => {
@@ -277,14 +391,14 @@ export function AnalyzeView({ text }: { text: string }) {
         title: `Shadowing ×${times}…`,
       });
       try {
-        await speakLoop(current, provider, prefs, times, gapMs);
+        await speakLoop(current, provider, activePrefs, times, gapMs);
         toast.style = Toast.Style.Success;
         toast.title = "Done";
       } catch (err) {
         await reportError(err);
       }
     })();
-  }, [current, provider, prefs]);
+  }, [activePrefs, current, provider, prefs.loopCount, prefs.loopGap]);
 
   const onRepeat = useCallback(() => {
     void repeatLast().then((ok) => {
@@ -303,7 +417,7 @@ export function AnalyzeView({ text }: { text: string }) {
         title: "Saving audio…",
       });
       try {
-        const dest = await exportAudio(current, provider, prefs);
+        const dest = await exportAudio(current, provider, activePrefs);
         toast.style = Toast.Style.Success;
         toast.title = "Saved to Downloads";
         toast.message = dest;
@@ -311,7 +425,7 @@ export function AnalyzeView({ text }: { text: string }) {
         await reportError(err);
       }
     })();
-  }, [current, provider, prefs]);
+  }, [activePrefs, current, provider]);
 
   const goToIndex = useCallback(
     (target: number) => {
@@ -322,15 +436,51 @@ export function AnalyzeView({ text }: { text: string }) {
     [pageSize, sentences.length],
   );
 
+  const selectAnalysisProvider = useCallback(
+    (next: ProviderName) => {
+      setProvider(next);
+      setRecords({});
+      setTranslations({});
+      setPageStart(0);
+      setActiveIndex(0);
+      persistSelection({ analysisProvider: next });
+    },
+    [persistSelection],
+  );
+
   const onSwitchProvider = useCallback(() => {
     const i = availableProviders.indexOf(provider);
     const next = availableProviders[(i + 1) % availableProviders.length];
-    setProvider(next);
-    setRecords({});
-    setTranslations({});
-    setPageStart(0);
-    setActiveIndex(0);
-  }, [availableProviders, provider]);
+    selectAnalysisProvider(next);
+  }, [availableProviders, provider, selectAnalysisProvider]);
+
+  const selectAnalysisModel = useCallback(
+    (model: string) => {
+      const nextModels = { ...analysisModels, [provider]: model };
+      setAnalysisModels(nextModels);
+      setRecords({});
+      setTranslations({});
+      persistSelection({ analysisModels: nextModels });
+    },
+    [analysisModels, persistSelection, provider],
+  );
+
+  const selectTtsProvider = useCallback(
+    (choice: TtsProviderChoice) => {
+      setTtsProviderChoice(choice);
+      persistSelection({ ttsProvider: choice });
+    },
+    [persistSelection],
+  );
+
+  const selectTtsModel = useCallback(
+    (model: string) => {
+      const nextModels = { ...ttsModels, [ttsProvider]: model };
+      setTtsModels(nextModels);
+      persistSelection({ ttsModels: nextModels });
+    },
+    [persistSelection, ttsModels, ttsProvider],
+  );
 
   const nextProvider =
     availableProviders.length > 1
@@ -395,6 +545,10 @@ export function AnalyzeView({ text }: { text: string }) {
       items={items}
       provider={provider}
       isLoading={anyLoading}
+      analysisModel={analysisModel}
+      ttsProvider={ttsProvider}
+      ttsFollowsAnalysis={ttsProviderChoice === "follow-analysis"}
+      ttsModel={ttsModel}
       activeIndex={activeIndex}
       sentenceTotal={sentences.length}
       pageStart={pageStart}
@@ -407,6 +561,37 @@ export function AnalyzeView({ text }: { text: string }) {
       onSave={onSave}
       onSwitchProvider={onSwitchProvider}
       switchToLabel={nextProvider ? PROVIDER_LABELS[nextProvider] : undefined}
+      analysisProviderOptions={availableProviders.map((value) => ({
+        value,
+        title: PROVIDER_LABELS[value],
+        selected: value === provider,
+      }))}
+      analysisModelOptions={ANALYSIS_MODELS[provider].map((option) => ({
+        value: option.id,
+        title: option.title,
+        selected: option.id === analysisModel,
+      }))}
+      ttsProviderOptions={[
+        {
+          value: "follow-analysis",
+          title: "Follow Analysis Provider",
+          selected: ttsProviderChoice === "follow-analysis",
+        },
+        ...availableTtsProviders.map((value) => ({
+          value,
+          title: PROVIDER_LABELS[value],
+          selected: ttsProviderChoice === value,
+        })),
+      ]}
+      ttsModelOptions={TTS_MODELS[ttsProvider].map((option) => ({
+        value: option.id,
+        title: option.title,
+        selected: option.id === ttsModel,
+      }))}
+      onSelectAnalysisProvider={selectAnalysisProvider}
+      onSelectAnalysisModel={selectAnalysisModel}
+      onSelectTtsProvider={selectTtsProvider}
+      onSelectTtsModel={selectTtsModel}
       onRetryCurrent={onRetryCurrent}
       onTranslateCurrent={onTranslateCurrent}
       onTranslatePage={onTranslatePage}
