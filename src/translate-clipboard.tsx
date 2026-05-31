@@ -23,8 +23,8 @@ export default function Command() {
       <TranslateView
         text={text}
         mode="express-intent"
-        title="Natural Expression"
-        sourceTitle="Clipboard Intent"
+        title="Translation"
+        sourceTitle="Clipboard"
       />
     );
   }
