@@ -94,12 +94,15 @@ describe("resolveAnalysisConfig", () => {
     expect(c.apiProtocol).toBe("anthropic");
     expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
-  it("builds MiMo config: api-key auth, default mimo-v2.5, thinking off, overridable base URL", () => {
+  it("builds MiMo config on the Anthropic Token Plan base URL", () => {
     const c = resolveAnalysisConfig("mimo", { mimoApiKey: "tp-x" });
     expect(c.baseURL).toBe(MIMO_BASE);
     expect(c.model).toBe("mimo-v2.5");
-    expect(c.authHeader).toBe("api-key");
-    expect(c.extraBody).toEqual({ enable_thinking: false });
+    expect(c.apiProtocol).toBe("anthropic");
+    expect(c.authHeader).toBeUndefined();
+    expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
+  });
+  it("keeps MiMo OpenAI-compatible overrides on chat/completions", () => {
     const pro = resolveAnalysisConfig("mimo", {
       mimoApiKey: "tp-x",
       mimoAnalysisModel: "mimo-v2.5-pro",
@@ -107,6 +110,9 @@ describe("resolveAnalysisConfig", () => {
     });
     expect(pro.model).toBe("mimo-v2.5-pro");
     expect(pro.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
+    expect(pro.apiProtocol).toBe("openai");
+    expect(pro.authHeader).toBe("api-key");
+    expect(pro.extraBody).toEqual({ enable_thinking: false });
   });
   it("throws MissingKeyError when key absent", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);

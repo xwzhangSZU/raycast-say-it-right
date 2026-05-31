@@ -452,10 +452,10 @@
     {
       "name": "mimoBaseURL",
       "title": "MiMo Base URL",
-      "description": "OpenAI-compatible base URL. Pay-as-you-go: https://api.xiaomimimo.com/v1 (default). Token Plan: token-plan-{cn,sgp,ams}.xiaomimimo.com/v1 (see your 订阅管理 page).",
+      "description": "MiMo Token Plan Anthropic-compatible base URL for analysis. TTS automatically maps this to the matching OpenAI-compatible /v1 endpoint. Pay-as-you-go /v1 is still supported.",
       "type": "textfield",
       "required": false,
-      "default": "https://api.xiaomimimo.com/v1"
+      "default": "https://token-plan-cn.xiaomimimo.com/anthropic"
     },
     {
       "name": "mimoAnalysisModel",

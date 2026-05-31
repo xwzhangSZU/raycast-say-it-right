@@ -54,7 +54,7 @@ type ExtensionPreferences = {
   "geminiTtsVoice": "Charon" | "Iapetus" | "Sulafat" | "Puck",
   /** MiMo (Xiaomi) API Key - Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS. */
   "mimoApiKey"?: string,
-  /** MiMo Base URL - OpenAI-compatible base URL. Pay-as-you-go: https://api.xiaomimimo.com/v1 (default). Token Plan: token-plan-{cn,sgp,ams}.xiaomimimo.com/v1 (see your 订阅管理 page). */
+  /** MiMo Base URL - MiMo Token Plan Anthropic-compatible base URL for analysis. TTS automatically maps this to the matching OpenAI-compatible /v1 endpoint. Pay-as-you-go /v1 is still supported. */
   "mimoBaseURL": string,
   /** MiMo Analysis Model - MiMo chat model for analysis (thinking is disabled for speed/determinism). */
   "mimoAnalysisModel": "mimo-v2.5" | "mimo-v2.5-pro",

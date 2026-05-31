@@ -89,7 +89,7 @@ export function resolveTtsConfig(
         TTS_MODELS.mimo,
         DEFAULT_TTS_MODELS.mimo,
       ),
-      baseURL: prefs.mimoBaseURL?.trim() || MIMO_BASE,
+      baseURL: mimoTtsBaseURL(prefs.mimoBaseURL?.trim() || MIMO_BASE),
     };
   }
   if (!prefs.qwenApiKey) throw new MissingKeyError("qwen");
@@ -114,4 +114,19 @@ export function buildTtsInstructions(rate: number): string {
   if (rate >= 1) return base;
   const pct = Math.round(rate * 100);
   return `${base} Speak slowly and deliberately, at about ${pct}% of normal speed, as a teaching example.`;
+}
+
+export function mimoTtsBaseURL(baseURL: string): string {
+  const trimmed = baseURL.replace(/\/+$/, "");
+  const lower = trimmed.toLowerCase();
+  if (lower.endsWith("/anthropic/v1/messages")) {
+    return `${trimmed.slice(0, -"/anthropic/v1/messages".length)}/v1`;
+  }
+  if (lower.endsWith("/anthropic/v1")) {
+    return `${trimmed.slice(0, -"/anthropic/v1".length)}/v1`;
+  }
+  if (lower.endsWith("/anthropic")) {
+    return `${trimmed.slice(0, -"/anthropic".length)}/v1`;
+  }
+  return trimmed;
 }
