@@ -13,6 +13,13 @@ const ABBREVIATIONS = new Set([
   "i.e",
   "a.m",
   "p.m",
+  "g.o.p",
+  "u.s",
+  "u.k",
+  "e.u",
+  "u.n",
+  "d.c",
+  "a.i",
 ]);
 
 /** Split English text into sentences. Deterministic and offline. */
@@ -31,9 +38,13 @@ export function splitSentences(text: string): string[] {
     )
       continue;
     if (ch === ".") {
+      const prev = normalized[i - 1] ?? "";
+      const next = normalized[i + 1] ?? "";
+      if (isUpperLetter(prev) && isUpperLetter(next)) continue;
       const before = normalized.slice(start, i);
       const lastWord = before.split(/\s/).pop()?.toLowerCase() ?? "";
       if (ABBREVIATIONS.has(lastWord)) continue;
+      if (isInitialism(`${lastWord}.`)) continue;
     }
     let end = i + 1;
     while (end < normalized.length && "!?.".includes(normalized[end])) end++;
@@ -45,6 +56,14 @@ export function splitSentences(text: string): string[] {
   const tail = normalized.slice(start).trim();
   if (tail) out.push(tail);
   return out.length > 0 ? out : [normalized];
+}
+
+function isInitialism(token: string): boolean {
+  return /^(?:[a-z]\.){2,}$/i.test(token);
+}
+
+function isUpperLetter(char: string): boolean {
+  return /^[A-Z]$/.test(char);
 }
 
 export function resolveSentencesPerPage(value: unknown): number {

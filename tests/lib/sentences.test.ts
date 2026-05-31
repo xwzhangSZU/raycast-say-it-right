@@ -6,7 +6,11 @@ import {
 
 describe("splitSentences", () => {
   it("splits on sentence boundaries", () => {
-    expect(splitSentences("Hello world. How are you? Fine!")).toEqual(["Hello world.", "How are you?", "Fine!"]);
+    expect(splitSentences("Hello world. How are you? Fine!")).toEqual([
+      "Hello world.",
+      "How are you?",
+      "Fine!",
+    ]);
   });
   it("returns a single-element array for one sentence", () => {
     expect(splitSentences("Just one sentence")).toEqual(["Just one sentence"]);
@@ -19,6 +23,11 @@ describe("splitSentences", () => {
       "Dr. Smith scored 3.5 points.",
       "Really?",
     ]);
+  });
+  it("does not split English initialisms into one-letter fragments", () => {
+    expect(
+      splitSentences("Trump Is Dominating G.O.P. Politics. Really?"),
+    ).toEqual(["Trump Is Dominating G.O.P. Politics.", "Really?"]);
   });
 });
 

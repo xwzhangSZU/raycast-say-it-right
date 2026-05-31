@@ -59,11 +59,52 @@ export function buildPrompt(
 }
 
 export function parseAnalysis(raw: string): ProsodyAnalysis {
-  const cleaned = raw
+  const cleaned = extractJsonObject(raw);
+  const json = JSON.parse(cleaned);
+  return ProsodyAnalysisSchema.parse(json);
+}
+
+function extractJsonObject(raw: string): string {
+  const stripped = raw
     .trim()
     .replace(/^```(?:json)?/i, "")
     .replace(/```$/i, "")
     .trim();
-  const json = JSON.parse(cleaned);
-  return ProsodyAnalysisSchema.parse(json);
+
+  if (stripped.startsWith("{") && stripped.endsWith("}")) {
+    return stripped;
+  }
+
+  const start = stripped.indexOf("{");
+  if (start === -1) return stripped;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < stripped.length; i++) {
+    const char = stripped[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === "{") depth++;
+    if (char === "}") {
+      depth--;
+      if (depth === 0) return stripped.slice(start, i + 1);
+    }
+  }
+
+  return stripped;
 }
