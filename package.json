@@ -409,14 +409,14 @@
     {
       "name": "mimoApiKey",
       "title": "MiMo (Xiaomi) API Key",
-      "description": "Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS.",
+      "description": "Xiaomi MiMo Token Plan key (tp-…). Used for MiMo analysis and TTS.",
       "type": "password",
       "required": false
     },
     {
       "name": "mimoBaseURL",
       "title": "MiMo Base URL",
-      "description": "MiMo Token Plan Anthropic-compatible base URL for analysis. TTS automatically maps this to the matching OpenAI-compatible /v1 endpoint. Pay-as-you-go /v1 is still supported.",
+      "description": "MiMo Token Plan Anthropic-compatible base URL for text generation. TTS uses the matching Token Plan /v1 endpoint because the Anthropic messages endpoint does not return audio.",
       "type": "textfield",
       "required": false,
       "default": "https://token-plan-cn.xiaomimimo.com/anthropic"
