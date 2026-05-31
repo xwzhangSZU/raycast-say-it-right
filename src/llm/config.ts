@@ -45,9 +45,8 @@ export const QWEN_BASE = {
 export const GEMINI_BASE =
   "https://generativelanguage.googleapis.com/v1beta/openai";
 
-/** MiMo (Xiaomi) default OpenAI-compatible base. Token-Plan users override this
- * with their cluster URL (token-plan-{cn,sgp,ams}.xiaomimimo.com/v1). */
-export const MIMO_BASE = "https://api.xiaomimimo.com/v1";
+/** MiMo (Xiaomi) Token Plan Anthropic-compatible base. */
+export const MIMO_BASE = "https://token-plan-cn.xiaomimimo.com/anthropic";
 
 /** MiniMax Token Plan's Anthropic-compatible endpoint. */
 export const MINIMAX_BASE = "https://api.minimaxi.com/anthropic";
@@ -169,14 +168,19 @@ export function resolveAnalysisConfig(
   if (provider === "mimo") {
     const key = prefs.mimoApiKey?.trim();
     if (!key) throw new MissingKeyError("mimo");
+    const mimoBaseURL = prefs.mimoBaseURL?.trim() || MIMO_BASE;
+    const mimoAnthropic = isAnthropicCompatibleBaseURL(mimoBaseURL);
     return {
-      baseURL: prefs.mimoBaseURL?.trim() || MIMO_BASE,
+      baseURL: mimoBaseURL,
       apiKey: key,
       model: resolveAnalysisModel("mimo", prefs),
-      authHeader: "api-key", // MiMo authenticates via `api-key`, not Bearer
+      apiProtocol: mimoAnthropic ? "anthropic" : "openai",
+      authHeader: mimoAnthropic ? undefined : "api-key",
       // MiMo-V2.5 uses a Qwen3-style reasoning parser; disable thinking for
       // fast, deterministic structured output (mirrors Qwen here).
-      extraBody: { enable_thinking: false },
+      extraBody: mimoAnthropic
+        ? { thinking: { type: "disabled" } }
+        : { enable_thinking: false },
     };
   }
   // Qwen analysis always uses Token Plan. DashScope is reserved for Qwen-TTS.

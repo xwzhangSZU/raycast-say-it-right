@@ -3,6 +3,7 @@ import {
   resolveTtsProvider,
   resolveTtsConfig,
   buildTtsInstructions,
+  mimoTtsBaseURL,
 } from "../../src/tts/index";
 
 describe("resolveTtsProvider", () => {
@@ -65,7 +66,20 @@ describe("resolveTtsConfig", () => {
     const c = resolveTtsConfig("mimo", { mimoApiKey: "tp", mimoTtsVoice: "Milo" });
     expect(c.model).toBe("mimo-v2.5-tts");
     expect(c.voice).toBe("Milo");
-    expect(c.baseURL).toBe("https://api.xiaomimimo.com/v1");
+    expect(c.baseURL).toBe("https://token-plan-cn.xiaomimimo.com/v1");
+  });
+  it("maps MiMo Anthropic bases to matching TTS /v1 bases", () => {
+    expect(
+      mimoTtsBaseURL("https://token-plan-cn.xiaomimimo.com/anthropic"),
+    ).toBe("https://token-plan-cn.xiaomimimo.com/v1");
+    expect(
+      mimoTtsBaseURL(
+        "https://token-plan-sgp.xiaomimimo.com/anthropic/v1/messages",
+      ),
+    ).toBe("https://token-plan-sgp.xiaomimimo.com/v1");
+    expect(mimoTtsBaseURL("https://api.xiaomimimo.com/v1")).toBe(
+      "https://api.xiaomimimo.com/v1",
+    );
   });
 });
 
