@@ -1,16 +1,18 @@
 import type { ChatConfig } from "./client";
+import {
+  ANALYSIS_MODELS,
+  DEFAULT_ANALYSIS_MODELS,
+  DEFAULT_ANALYSIS_PROVIDER,
+  PROVIDER_IDS,
+  knownModelOrDefault,
+  type ProviderName,
+} from "./models";
 
-/** Providers that can analyze text. */
-export type ProviderName = "openai" | "qwen" | "gemini" | "mimo";
-/** Providers that can synthesize speech (TTS). Gemini has no TTS here. */
-export type TtsProviderName = "openai" | "qwen" | "mimo";
-
-export const PROVIDER_LABELS: Record<ProviderName, string> = {
-  openai: "OpenAI",
-  qwen: "Qwen",
-  gemini: "Gemini",
-  mimo: "MiMo",
-};
+export {
+  PROVIDER_LABELS,
+  type ProviderName,
+  type TtsProviderName,
+} from "./models";
 
 export interface RawPrefs {
   openaiApiKey?: string;
@@ -18,20 +20,24 @@ export interface RawPrefs {
   qwenApiKey?: string;
   qwenAnalysisModel?: string;
   qwenRegion?: "beijing" | "intl";
-  // Qwen analysis can target a separate endpoint/key (e.g. Alibaba Token Plan);
-  // TTS always stays on the standard DashScope API with qwenApiKey.
+  // qwenApiKey is the DashScope key for Qwen-TTS only.
+  // Qwen analysis uses Token Plan through qwenAnalysisApiKey/baseURL.
   qwenAnalysisBaseURL?: string;
   qwenAnalysisApiKey?: string;
   geminiApiKey?: string;
   geminiAnalysisModel?: string;
+  minimaxApiKey?: string;
+  minimaxAnalysisModel?: string;
+  minimaxBaseURL?: string;
   mimoApiKey?: string;
   mimoAnalysisModel?: string;
   mimoBaseURL?: string;
 }
 
 export const QWEN_BASE = {
-  beijing: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-  intl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+  compatible:
+    "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+  anthropic: "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic",
 } as const;
 
 /** Gemini's OpenAI-compatible endpoint. No trailing slash — the client
@@ -43,10 +49,32 @@ export const GEMINI_BASE =
  * with their cluster URL (token-plan-{cn,sgp,ams}.xiaomimimo.com/v1). */
 export const MIMO_BASE = "https://api.xiaomimimo.com/v1";
 
+/** MiniMax Token Plan's Anthropic-compatible endpoint. */
+export const MINIMAX_BASE = "https://api.minimaxi.com/anthropic";
+
 export class MissingKeyError extends Error {
   constructor(public provider: ProviderName) {
     super(`Missing API key for ${provider}`);
   }
+}
+
+export function getAvailableAnalysisProviders(prefs: {
+  openaiApiKey?: string;
+  qwenApiKey?: string;
+  qwenAnalysisApiKey?: string;
+  geminiApiKey?: string;
+  mimoApiKey?: string;
+  minimaxApiKey?: string;
+}): ProviderName[] {
+  return PROVIDER_IDS.filter((provider) => {
+    if (provider === "qwen") {
+      return Boolean(prefs.qwenAnalysisApiKey?.trim());
+    }
+    if (provider === "minimax") return Boolean(prefs.minimaxApiKey?.trim());
+    if (provider === "mimo") return Boolean(prefs.mimoApiKey?.trim());
+    if (provider === "gemini") return Boolean(prefs.geminiApiKey?.trim());
+    return Boolean(prefs.openaiApiKey?.trim());
+  });
 }
 
 export function pickInitialProvider(prefs: {
@@ -55,19 +83,54 @@ export function pickInitialProvider(prefs: {
   qwenAnalysisApiKey?: string;
   geminiApiKey?: string;
   mimoApiKey?: string;
+  minimaxApiKey?: string;
   defaultAnalysisProvider?: ProviderName;
 }): ProviderName {
-  const available: ProviderName[] = [];
-  if (prefs.openaiApiKey?.trim()) available.push("openai");
-  if (prefs.qwenApiKey?.trim() || prefs.qwenAnalysisApiKey?.trim())
-    available.push("qwen");
-  if (prefs.geminiApiKey?.trim()) available.push("gemini");
-  if (prefs.mimoApiKey?.trim()) available.push("mimo");
+  const available = getAvailableAnalysisProviders(prefs);
   if (available.length === 1) return available[0];
   // Several (or none) configured → honor the preferred provider, else default.
   const preferred = prefs.defaultAnalysisProvider;
   if (preferred && available.includes(preferred)) return preferred;
-  return available[0] ?? preferred ?? "openai";
+  return available[0] ?? preferred ?? DEFAULT_ANALYSIS_PROVIDER;
+}
+
+export function resolveAnalysisModel(
+  provider: ProviderName,
+  prefs: RawPrefs,
+): string {
+  if (provider === "openai") {
+    return knownModelOrDefault(
+      prefs.openaiAnalysisModel,
+      ANALYSIS_MODELS.openai,
+      DEFAULT_ANALYSIS_MODELS.openai,
+    );
+  }
+  if (provider === "gemini") {
+    return knownModelOrDefault(
+      prefs.geminiAnalysisModel,
+      ANALYSIS_MODELS.gemini,
+      DEFAULT_ANALYSIS_MODELS.gemini,
+    );
+  }
+  if (provider === "minimax") {
+    return knownModelOrDefault(
+      prefs.minimaxAnalysisModel,
+      ANALYSIS_MODELS.minimax,
+      DEFAULT_ANALYSIS_MODELS.minimax,
+    );
+  }
+  if (provider === "mimo") {
+    return knownModelOrDefault(
+      prefs.mimoAnalysisModel,
+      ANALYSIS_MODELS.mimo,
+      DEFAULT_ANALYSIS_MODELS.mimo,
+    );
+  }
+  return knownModelOrDefault(
+    prefs.qwenAnalysisModel,
+    ANALYSIS_MODELS.qwen,
+    DEFAULT_ANALYSIS_MODELS.qwen,
+  );
 }
 
 export function resolveAnalysisConfig(
@@ -80,7 +143,7 @@ export function resolveAnalysisConfig(
     return {
       baseURL: "https://api.openai.com/v1",
       apiKey: key,
-      model: prefs.openaiAnalysisModel || "gpt-4o-mini",
+      model: resolveAnalysisModel("openai", prefs),
     };
   }
   if (provider === "gemini") {
@@ -89,7 +152,18 @@ export function resolveAnalysisConfig(
     return {
       baseURL: GEMINI_BASE,
       apiKey: key,
-      model: prefs.geminiAnalysisModel || "gemini-3.5-flash",
+      model: resolveAnalysisModel("gemini", prefs),
+    };
+  }
+  if (provider === "minimax") {
+    const key = prefs.minimaxApiKey?.trim();
+    if (!key) throw new MissingKeyError("minimax");
+    return {
+      baseURL: prefs.minimaxBaseURL?.trim() || MINIMAX_BASE,
+      apiKey: key,
+      model: resolveAnalysisModel("minimax", prefs),
+      apiProtocol: "anthropic",
+      extraBody: { thinking: { type: "disabled" } },
     };
   }
   if (provider === "mimo") {
@@ -98,23 +172,30 @@ export function resolveAnalysisConfig(
     return {
       baseURL: prefs.mimoBaseURL?.trim() || MIMO_BASE,
       apiKey: key,
-      model: prefs.mimoAnalysisModel || "mimo-v2.5",
+      model: resolveAnalysisModel("mimo", prefs),
       authHeader: "api-key", // MiMo authenticates via `api-key`, not Bearer
       // MiMo-V2.5 uses a Qwen3-style reasoning parser; disable thinking for
       // fast, deterministic structured output (mirrors Qwen here).
       extraBody: { enable_thinking: false },
     };
   }
-  // Qwen: analysis may use a separate endpoint + key (e.g. Token Plan);
-  // falls back to the standard DashScope endpoint + qwenApiKey.
-  const region = prefs.qwenRegion === "intl" ? "intl" : "beijing";
-  const analysisKey =
-    prefs.qwenAnalysisApiKey?.trim() || prefs.qwenApiKey?.trim();
+  // Qwen analysis always uses Token Plan. DashScope is reserved for Qwen-TTS.
+  const analysisKey = prefs.qwenAnalysisApiKey?.trim();
   if (!analysisKey) throw new MissingKeyError("qwen");
+  const qwenBaseURL = prefs.qwenAnalysisBaseURL?.trim() || QWEN_BASE.compatible;
+  const qwenAnthropic = isAnthropicCompatibleBaseURL(qwenBaseURL);
   return {
-    baseURL: prefs.qwenAnalysisBaseURL?.trim() || QWEN_BASE[region],
+    baseURL: qwenBaseURL,
     apiKey: analysisKey,
-    model: prefs.qwenAnalysisModel || "qwen3.6-flash",
-    extraBody: { enable_thinking: false },
+    model: resolveAnalysisModel("qwen", prefs),
+    apiProtocol: qwenAnthropic ? "anthropic" : "openai",
+    extraBody: qwenAnthropic
+      ? { thinking: { type: "disabled" } }
+      : { enable_thinking: false },
   };
+}
+
+function isAnthropicCompatibleBaseURL(baseURL: string): boolean {
+  const lower = baseURL.toLowerCase();
+  return lower.includes("/anthropic") || lower.endsWith("/v1/messages");
 }

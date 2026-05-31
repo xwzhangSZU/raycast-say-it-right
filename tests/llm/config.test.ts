@@ -5,6 +5,7 @@ import {
   QWEN_BASE,
   GEMINI_BASE,
   MIMO_BASE,
+  MINIMAX_BASE,
   pickInitialProvider,
 } from "../../src/llm/config";
 
@@ -12,22 +13,20 @@ describe("resolveAnalysisConfig", () => {
   it("builds OpenAI config", () => {
     const c = resolveAnalysisConfig("openai", {
       openaiApiKey: "sk",
-      openaiAnalysisModel: "gpt-x",
+      openaiAnalysisModel: "gpt-5.5",
     });
     expect(c.baseURL).toBe("https://api.openai.com/v1");
-    expect(c.model).toBe("gpt-x");
+    expect(c.model).toBe("gpt-5.5");
   });
-  it("builds Qwen config with region-specific base URL", () => {
+  it("builds Qwen config on the Token Plan base URL", () => {
     const c = resolveAnalysisConfig("qwen", {
-      qwenApiKey: "sk",
-      qwenRegion: "intl",
+      qwenAnalysisApiKey: "sk-sp",
     });
-    expect(c.baseURL).toBe(QWEN_BASE.intl);
+    expect(c.baseURL).toBe(QWEN_BASE.compatible);
     expect(c.model).toBe("qwen3.6-flash");
   });
   it("Qwen analysis can target a separate Token Plan endpoint + key", () => {
     const c = resolveAnalysisConfig("qwen", {
-      qwenApiKey: "sk-regular",
       qwenAnalysisApiKey: "sk-sp-placeholder",
       qwenAnalysisBaseURL:
         "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
@@ -38,13 +37,22 @@ describe("resolveAnalysisConfig", () => {
     expect(c.apiKey).toBe("sk-sp-placeholder");
     expect(c.extraBody).toEqual({ enable_thinking: false });
   });
-  it("Qwen analysis falls back to the main key/endpoint without an override", () => {
-    const c = resolveAnalysisConfig("qwen", { qwenApiKey: "sk-regular" });
-    expect(c.apiKey).toBe("sk-regular");
-    expect(c.baseURL).toBe(QWEN_BASE.beijing);
+  it("Qwen analysis can target an Anthropic-compatible Token Plan endpoint", () => {
+    const c = resolveAnalysisConfig("qwen", {
+      qwenAnalysisApiKey: "sk-sp",
+      qwenAnalysisBaseURL:
+        "https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic",
+    });
+    expect(c.apiProtocol).toBe("anthropic");
+    expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
+  });
+  it("does not use the DashScope TTS key for Qwen analysis", () => {
+    expect(() =>
+      resolveAnalysisConfig("qwen", { qwenApiKey: "sk-dashscope" }),
+    ).toThrow(MissingKeyError);
   });
   it("sets enable_thinking:false in Qwen extraBody and no extraBody for OpenAI", () => {
-    const qwen = resolveAnalysisConfig("qwen", { qwenApiKey: "sk" });
+    const qwen = resolveAnalysisConfig("qwen", { qwenAnalysisApiKey: "sk-sp" });
     expect(qwen.extraBody).toEqual({ enable_thinking: false });
     const openai = resolveAnalysisConfig("openai", { openaiApiKey: "sk" });
     expect(openai.extraBody).toBeUndefined();
@@ -60,13 +68,10 @@ describe("resolveAnalysisConfig", () => {
       resolveAnalysisConfig("mimo", { mimoApiKey: " tp-mimo " }).apiKey,
     ).toBe("tp-mimo");
     expect(
-      resolveAnalysisConfig("qwen", { qwenApiKey: " sk-qwen " }).apiKey,
-    ).toBe("sk-qwen");
+      resolveAnalysisConfig("minimax", { minimaxApiKey: " sk-mm " }).apiKey,
+    ).toBe("sk-mm");
     expect(
-      resolveAnalysisConfig("qwen", {
-        qwenApiKey: " sk-regular ",
-        qwenAnalysisApiKey: " sk-sp ",
-      }).apiKey,
+      resolveAnalysisConfig("qwen", { qwenAnalysisApiKey: " sk-sp " }).apiKey,
     ).toBe("sk-sp");
   });
   it("builds Gemini config on its OpenAI-compatible endpoint", () => {
@@ -76,9 +81,16 @@ describe("resolveAnalysisConfig", () => {
     expect(c.model).toBe("gemini-3.5-flash");
     const override = resolveAnalysisConfig("gemini", {
       geminiApiKey: "sk",
-      geminiAnalysisModel: "gemini-3.1-pro-preview",
+      geminiAnalysisModel: "unknown-gemini",
     });
-    expect(override.model).toBe("gemini-3.1-pro-preview");
+    expect(override.model).toBe("gemini-3.5-flash");
+  });
+  it("builds MiniMax config: Anthropic-compatible, high-speed default, thinking off", () => {
+    const c = resolveAnalysisConfig("minimax", { minimaxApiKey: "sk-mm" });
+    expect(c.baseURL).toBe(MINIMAX_BASE);
+    expect(c.model).toBe("MiniMax-M2.7-highspeed");
+    expect(c.apiProtocol).toBe("anthropic");
+    expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
   it("builds MiMo config: api-key auth, default mimo-v2.5, thinking off, overridable base URL", () => {
     const c = resolveAnalysisConfig("mimo", { mimoApiKey: "tp-x" });
@@ -98,6 +110,7 @@ describe("resolveAnalysisConfig", () => {
     expect(() => resolveAnalysisConfig("openai", {})).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("qwen", {})).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("gemini", {})).toThrow(MissingKeyError);
+    expect(() => resolveAnalysisConfig("minimax", {})).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("mimo", {})).toThrow(MissingKeyError);
   });
   it("throws MissingKeyError for whitespace-only keys", () => {
@@ -106,12 +119,14 @@ describe("resolveAnalysisConfig", () => {
     ).toThrow(MissingKeyError);
     expect(() =>
       resolveAnalysisConfig("qwen", {
-        qwenApiKey: "  ",
         qwenAnalysisApiKey: "  ",
       }),
     ).toThrow(MissingKeyError);
     expect(() =>
       resolveAnalysisConfig("gemini", { geminiApiKey: "  " }),
+    ).toThrow(MissingKeyError);
+    expect(() =>
+      resolveAnalysisConfig("minimax", { minimaxApiKey: "  " }),
     ).toThrow(MissingKeyError);
     expect(() => resolveAnalysisConfig("mimo", { mimoApiKey: "  " })).toThrow(
       MissingKeyError,
@@ -122,31 +137,39 @@ describe("resolveAnalysisConfig", () => {
 describe("pickInitialProvider", () => {
   it("uses the only provider whose key is set", () => {
     expect(pickInitialProvider({ openaiApiKey: "sk" })).toBe("openai");
-    expect(pickInitialProvider({ qwenApiKey: "sk" })).toBe("qwen");
+    expect(pickInitialProvider({ qwenAnalysisApiKey: "sk-sp" })).toBe("qwen");
+  });
+  it("does not count the DashScope TTS key as a Qwen analysis key", () => {
+    expect(
+      pickInitialProvider({
+        qwenApiKey: "sk-dashscope",
+        openaiApiKey: "sk-openai",
+      }),
+    ).toBe("openai");
   });
   it("falls back to the preferred provider when both keys are set", () => {
     expect(
       pickInitialProvider({
         openaiApiKey: "a",
-        qwenApiKey: "b",
+        qwenAnalysisApiKey: "b",
         defaultAnalysisProvider: "qwen",
       }),
     ).toBe("qwen");
-    expect(pickInitialProvider({ openaiApiKey: "a", qwenApiKey: "b" })).toBe(
-      "openai",
-    );
+    expect(
+      pickInitialProvider({ openaiApiKey: "a", qwenAnalysisApiKey: "b" }),
+    ).toBe("qwen");
   });
   it("ignores blank/whitespace keys", () => {
-    expect(pickInitialProvider({ openaiApiKey: "  ", qwenApiKey: "sk" })).toBe(
-      "qwen",
-    );
+    expect(
+      pickInitialProvider({ openaiApiKey: "  ", qwenAnalysisApiKey: "sk-sp" }),
+    ).toBe("qwen");
   });
   it("supports gemini as the sole or preferred provider", () => {
     expect(pickInitialProvider({ geminiApiKey: "sk" })).toBe("gemini");
     expect(
       pickInitialProvider({
         openaiApiKey: "a",
-        qwenApiKey: "b",
+        qwenAnalysisApiKey: "b",
         geminiApiKey: "c",
         defaultAnalysisProvider: "gemini",
       }),
@@ -161,5 +184,16 @@ describe("pickInitialProvider", () => {
         defaultAnalysisProvider: "mimo",
       }),
     ).toBe("mimo");
+  });
+  it("supports minimax as the sole or preferred provider", () => {
+    expect(pickInitialProvider({ minimaxApiKey: "sk-mm" })).toBe("minimax");
+    expect(
+      pickInitialProvider({
+        qwenApiKey: "a",
+        qwenAnalysisApiKey: "a-sp",
+        minimaxApiKey: "b",
+        defaultAnalysisProvider: "minimax",
+      }),
+    ).toBe("minimax");
   });
 });

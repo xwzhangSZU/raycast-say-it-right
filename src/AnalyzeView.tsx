@@ -2,13 +2,26 @@ import { showToast, Toast } from "@raycast/api";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { ProsodyAnalysis } from "./types";
 import {
+  getAvailableAnalysisProviders,
   pickInitialProvider,
   PROVIDER_LABELS,
+  resolveAnalysisConfig,
+  resolveAnalysisModel,
   type ProviderName,
 } from "./llm/config";
+import type { ChatConfig } from "./llm/client";
+import { PROVIDER_IDS } from "./llm/models";
 import { analyze } from "./llm/analyze";
-import { performAnalysis, type AnalysisIo } from "./llm/performAnalysis";
-import { splitSentences } from "./lib/sentences";
+import { resolveTranslationTarget, translateText } from "./llm/translate";
+import type { PromptOptions } from "./llm/prompt";
+import { isSingleWord } from "./lib/detect";
+import { analysisCacheKey } from "./lib/cache-key";
+import {
+  readTranslationCache,
+  translationCacheKey,
+  writeTranslationCache,
+} from "./lib/translation-cache";
+import { splitSentences, resolveSentencesPerPage } from "./lib/sentences";
 import { resolveLoop } from "./lib/loop";
 import { getPrefs } from "./lib/preferences";
 import { reportError } from "./lib/errors";
@@ -19,12 +32,23 @@ import {
 } from "./components/AnalysisDetail";
 import { speak, speakLoop, exportAudio, repeatLast } from "./tts/speak";
 
-const ANALYSIS_IO: AnalysisIo = {
-  analyze,
-  readCache: readAnalysisCache,
-  writeCache: writeAnalysisCache,
-  reportError,
-};
+interface AnalysisRecord {
+  analysis?: ProsodyAnalysis;
+  isLoading?: boolean;
+  failed?: boolean;
+}
+
+type AnalysisRecords = Record<number, AnalysisRecord | undefined>;
+
+interface TranslationRecord {
+  translation?: string;
+  targetLanguage?: string;
+  targetLanguageTitle?: string;
+  isLoading?: boolean;
+  failed?: boolean;
+}
+
+type TranslationRecords = Record<number, TranslationRecord | undefined>;
 
 export function AnalyzeView({ text }: { text: string }) {
   const prefs = useMemo(() => getPrefs(), []);
@@ -32,46 +56,199 @@ export function AnalyzeView({ text }: { text: string }) {
     const s = splitSentences(text);
     return s.length > 0 ? s : [text.trim()];
   }, [text]);
-  const [index, setIndex] = useState(0);
-  const current = sentences[Math.min(index, sentences.length - 1)];
+  const pageSize = useMemo(
+    () => resolveSentencesPerPage(prefs.sentencesPerPage),
+    [prefs.sentencesPerPage],
+  );
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [pageStart, setPageStart] = useState(0);
   const [provider, setProvider] = useState<ProviderName>(
     pickInitialProvider(prefs),
   );
-  // Providers the user has actually configured (a key is set). The switch
-  // action cycles through these; falls back to all three if none configured.
-  const availableProviders = useMemo<ProviderName[]>(() => {
-    const list: ProviderName[] = [];
-    if (prefs.openaiApiKey?.trim()) list.push("openai");
-    if (prefs.qwenApiKey?.trim() || prefs.qwenAnalysisApiKey?.trim())
-      list.push("qwen");
-    if (prefs.geminiApiKey?.trim()) list.push("gemini");
-    if (prefs.mimoApiKey?.trim()) list.push("mimo");
-    return list.length > 0 ? list : ["openai", "qwen", "gemini", "mimo"];
-  }, [prefs]);
-  const [analysis, setAnalysis] = useState<ProsodyAnalysis | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
-  // Monotonic request id: only the latest in-flight analysis may mutate state,
-  // so switching provider/sentence mid-flight can't let a stale result win.
+  const [records, setRecords] = useState<AnalysisRecords>({});
+  const [translations, setTranslations] = useState<TranslationRecords>({});
   const genRef = useRef(0);
+  const translationGenRef = useRef(0);
 
-  const run = useCallback(
-    async (input: string, prov: ProviderName, forceFresh = false) => {
-      const myGen = ++genRef.current;
-      await performAnalysis(input, prov, {
-        prefs,
-        forceFresh,
-        isCurrent: () => myGen === genRef.current,
-        sinks: { setLoading: setIsLoading, setFailed, setAnalysis },
-        io: ANALYSIS_IO,
-      });
+  const current = sentences[Math.min(activeIndex, sentences.length - 1)];
+  const pageEnd = Math.min(pageStart + pageSize, sentences.length);
+  const pageIndexes = useMemo(() => {
+    const indexes: number[] = [];
+    for (let i = pageStart; i < pageEnd; i++) indexes.push(i);
+    return indexes;
+  }, [pageEnd, pageStart]);
+
+  // Providers the user has actually configured (a key is set). The switch
+  // action cycles through these; falls back to the full catalog if none configured.
+  const availableProviders = useMemo<ProviderName[]>(() => {
+    const list = getAvailableAnalysisProviders(prefs);
+    return list.length > 0 ? list : [...PROVIDER_IDS];
+  }, [prefs]);
+
+  const setRecord = useCallback((index: number, record: AnalysisRecord) => {
+    setRecords((prev) => ({ ...prev, [index]: record }));
+  }, []);
+
+  const setTranslationRecord = useCallback(
+    (index: number, record: TranslationRecord) => {
+      setTranslations((prev) => ({ ...prev, [index]: record }));
     },
-    [prefs],
+    [],
   );
 
   useEffect(() => {
-    void run(current, provider);
-  }, [current, provider, run]);
+    setPageStart((start) => Math.min(start, Math.max(sentences.length - 1, 0)));
+    setActiveIndex((index) =>
+      Math.min(index, Math.max(sentences.length - 1, 0)),
+    );
+  }, [sentences.length]);
+
+  const analyzeOne = useCallback(
+    async (index: number, cfg: ChatConfig, generation: number, key: string) => {
+      const input = sentences[index];
+      if (!input) return;
+
+      try {
+        const opts: PromptOptions = {
+          isWord: isSingleWord(input),
+          accent: "GA",
+        };
+        const result = await analyze(input, opts, cfg);
+        writeAnalysisCache(key, result);
+        if (generation === genRef.current) {
+          setRecord(index, { analysis: result, isLoading: false });
+        }
+      } catch (err) {
+        if (generation === genRef.current) {
+          setRecord(index, { isLoading: false, failed: true });
+        }
+        await reportError(err);
+      }
+    },
+    [sentences, setRecord],
+  );
+
+  const analyzeIndexes = useCallback(
+    async (indexes: number[], prov: ProviderName, forceFresh = false) => {
+      const generation = ++genRef.current;
+      const model = resolveAnalysisModel(prov, prefs);
+      const misses: { index: number; key: string }[] = [];
+
+      for (const index of indexes) {
+        const input = sentences[index];
+        if (!input) continue;
+        const key = analysisCacheKey(input, prov, "GA", model);
+        setRecord(index, { isLoading: true, failed: false });
+        const cached = forceFresh ? null : readAnalysisCache(key);
+        if (cached) {
+          if (generation === genRef.current) {
+            setRecord(index, { analysis: cached, isLoading: false });
+          }
+        } else {
+          misses.push({ index, key });
+        }
+      }
+
+      if (misses.length === 0) return;
+
+      let cfg: ChatConfig;
+      try {
+        cfg = resolveAnalysisConfig(prov, prefs);
+      } catch (err) {
+        misses.forEach(({ index }) =>
+          setRecord(index, { isLoading: false, failed: true }),
+        );
+        await reportError(err);
+        return;
+      }
+
+      for (const { index, key } of misses) {
+        if (generation !== genRef.current) return;
+        await analyzeOne(index, cfg, generation, key);
+      }
+    },
+    [analyzeOne, prefs, sentences, setRecord],
+  );
+
+  useEffect(() => {
+    void analyzeIndexes(pageIndexes, provider);
+  }, [analyzeIndexes, pageIndexes, provider]);
+
+  const translateIndexes = useCallback(
+    async (indexes: number[], forceFresh = false) => {
+      const generation = ++translationGenRef.current;
+      const model = resolveAnalysisModel(provider, prefs);
+      const misses: { index: number; key: string; targetLanguage: string }[] =
+        [];
+
+      for (const index of indexes) {
+        const input = sentences[index];
+        if (!input) continue;
+        const target = resolveTranslationTarget(
+          prefs.translationTargetLanguage,
+          input,
+        );
+        const key = translationCacheKey({
+          text: input,
+          provider,
+          model,
+          targetLanguage: target.language,
+        });
+        setTranslationRecord(index, {
+          isLoading: true,
+          failed: false,
+          targetLanguage: target.language,
+          targetLanguageTitle: target.title,
+        });
+        const cached = forceFresh ? null : readTranslationCache(key);
+        if (cached) {
+          if (generation === translationGenRef.current) {
+            setTranslationRecord(index, {
+              ...cached,
+              isLoading: false,
+            });
+          }
+        } else {
+          misses.push({ index, key, targetLanguage: target.language });
+        }
+      }
+
+      if (misses.length === 0) return;
+
+      let cfg: ChatConfig;
+      try {
+        cfg = resolveAnalysisConfig(provider, prefs);
+      } catch (err) {
+        misses.forEach(({ index }) =>
+          setTranslationRecord(index, { isLoading: false, failed: true }),
+        );
+        await reportError(err);
+        return;
+      }
+
+      for (const { index, key, targetLanguage } of misses) {
+        if (generation !== translationGenRef.current) return;
+        const input = sentences[index];
+        if (!input) continue;
+        try {
+          const result = await translateText(input, cfg, targetLanguage);
+          writeTranslationCache(key, result);
+          if (generation === translationGenRef.current) {
+            setTranslationRecord(index, {
+              ...result,
+              isLoading: false,
+            });
+          }
+        } catch (err) {
+          if (generation === translationGenRef.current) {
+            setTranslationRecord(index, { isLoading: false, failed: true });
+          }
+          await reportError(err);
+        }
+      }
+    },
+    [prefs, provider, sentences, setTranslationRecord],
+  );
 
   const speakAt = useCallback(
     (rate: number, label: string) => {
@@ -136,12 +313,25 @@ export function AnalyzeView({ text }: { text: string }) {
     })();
   }, [current, provider, prefs]);
 
+  const goToIndex = useCallback(
+    (target: number) => {
+      const next = Math.min(Math.max(target, 0), sentences.length - 1);
+      setActiveIndex(next);
+      setPageStart(Math.floor(next / pageSize) * pageSize);
+    },
+    [pageSize, sentences.length],
+  );
+
   const onSwitchProvider = useCallback(() => {
-    setProvider((p) => {
-      const i = availableProviders.indexOf(p);
-      return availableProviders[(i + 1) % availableProviders.length];
-    });
-  }, [availableProviders]);
+    const i = availableProviders.indexOf(provider);
+    const next = availableProviders[(i + 1) % availableProviders.length];
+    setProvider(next);
+    setRecords({});
+    setTranslations({});
+    setPageStart(0);
+    setActiveIndex(0);
+  }, [availableProviders, provider]);
+
   const nextProvider =
     availableProviders.length > 1
       ? availableProviders[
@@ -150,31 +340,65 @@ export function AnalyzeView({ text }: { text: string }) {
       : undefined;
 
   const onNewExample = useCallback(() => {
-    void run(current, provider, true);
-  }, [current, provider, run]);
+    void analyzeIndexes([activeIndex], provider, true);
+  }, [activeIndex, analyzeIndexes, provider]);
+  const onRetryCurrent = onNewExample;
+  const onTranslateCurrent = useCallback(() => {
+    void translateIndexes([activeIndex]);
+  }, [activeIndex, translateIndexes]);
+  const onTranslatePage = useCallback(() => {
+    void translateIndexes(pageIndexes);
+  }, [pageIndexes, translateIndexes]);
 
-  const onNext = useCallback(
-    () => setIndex((i) => Math.min(i + 1, sentences.length - 1)),
-    [sentences.length],
+  const onNextSentence = useCallback(
+    () => goToIndex(activeIndex + 1),
+    [activeIndex, goToIndex],
   );
-  const onPrev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
+  const onPrevSentence = useCallback(
+    () => goToIndex(activeIndex - 1),
+    [activeIndex, goToIndex],
+  );
+  const onNextPage = useCallback(() => {
+    const next = Math.min(pageStart + pageSize, sentences.length - 1);
+    goToIndex(next);
+  }, [goToIndex, pageSize, pageStart, sentences.length]);
+  const onPrevPage = useCallback(() => {
+    goToIndex(Math.max(pageStart - pageSize, 0));
+  }, [goToIndex, pageSize, pageStart]);
 
-  if (!analysis) {
-    return (
-      <AnalysisPlaceholder
-        isLoading={isLoading}
-        failed={failed}
-        onRetry={() => void run(current, provider, true)}
-      />
-    );
+  const items = useMemo(
+    () =>
+      pageIndexes.map((index) => ({
+        index,
+        text: sentences[index],
+        analysis: records[index]?.analysis,
+        isLoading: records[index]?.isLoading,
+        failed: records[index]?.failed,
+        translation: translations[index]?.translation,
+        translationTarget: translations[index]?.targetLanguageTitle,
+        translationLoading: translations[index]?.isLoading,
+        translationFailed: translations[index]?.failed,
+      })),
+    [pageIndexes, records, sentences, translations],
+  );
+
+  if (sentences.length === 0 || !current) {
+    return <AnalysisPlaceholder isLoading={false} failed />;
   }
+
+  const anyLoading = items.some((item) => item.isLoading);
+  const activeRecord = records[activeIndex];
+  const activeTranslation = translations[activeIndex]?.translation;
+
   return (
     <AnalysisDetail
-      analysis={analysis}
+      items={items}
       provider={provider}
-      isLoading={isLoading}
-      sentenceIndex={index}
+      isLoading={anyLoading}
+      activeIndex={activeIndex}
       sentenceTotal={sentences.length}
+      pageStart={pageStart}
+      pageEnd={pageEnd}
       onPlay={() => speakAt(1, "Speaking…")}
       onSlow={() => speakAt(0.75, "Speaking slowly…")}
       onSlower={() => speakAt(0.5, "Speaking slower…")}
@@ -183,9 +407,20 @@ export function AnalyzeView({ text }: { text: string }) {
       onSave={onSave}
       onSwitchProvider={onSwitchProvider}
       switchToLabel={nextProvider ? PROVIDER_LABELS[nextProvider] : undefined}
-      onNewExample={analysis.isGeneratedExample ? onNewExample : undefined}
-      onNext={sentences.length > 1 ? onNext : undefined}
-      onPrev={sentences.length > 1 ? onPrev : undefined}
+      onRetryCurrent={onRetryCurrent}
+      onTranslateCurrent={onTranslateCurrent}
+      onTranslatePage={onTranslatePage}
+      activeTranslation={activeTranslation}
+      onNewExample={
+        activeRecord?.analysis?.isGeneratedExample ? onNewExample : undefined
+      }
+      onSelectSentence={goToIndex}
+      onNextSentence={
+        activeIndex < sentences.length - 1 ? onNextSentence : undefined
+      }
+      onPrevSentence={activeIndex > 0 ? onPrevSentence : undefined}
+      onNextPage={pageEnd < sentences.length ? onNextPage : undefined}
+      onPrevPage={pageStart > 0 ? onPrevPage : undefined}
     />
   );
 }

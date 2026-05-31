@@ -1,20 +1,36 @@
 import type { ProviderName, TtsProviderName } from "../llm/config";
-import { MissingKeyError, QWEN_BASE, MIMO_BASE } from "../llm/config";
+import { MissingKeyError, MIMO_BASE } from "../llm/config";
+import {
+  DEFAULT_TTS_MODELS,
+  DEFAULT_TTS_VOICES,
+  TTS_MODELS,
+  TTS_PROVIDER_IDS,
+  knownModelOrDefault,
+} from "../llm/models";
 import type { TtsConfig, TtsPrefs } from "./types";
+
+export const GEMINI_TTS_BASE =
+  "https://generativelanguage.googleapis.com/v1beta";
+export const MINIMAX_TTS_BASE = "https://api.minimaxi.com/v1";
+export const QWEN_TTS_BASE = {
+  beijing: "https://dashscope.aliyuncs.com/api/v1",
+  intl: "https://dashscope-intl.aliyuncs.com/api/v1",
+} as const;
 
 export function resolveTtsProvider(
   analysisProvider: ProviderName,
   prefs: TtsPrefs,
 ): TtsProviderName {
   const choice = prefs.ttsProvider || "follow-analysis";
-  if (choice !== "follow-analysis") return choice; // explicit openai|qwen|mimo
-  // "follow-analysis": every analysis provider except gemini can also speak.
-  if (analysisProvider !== "gemini") return analysisProvider;
-  // gemini has no TTS here → fall back to whichever TTS key is set.
-  if (prefs.openaiApiKey?.trim()) return "openai";
+  if (choice !== "follow-analysis") return choice;
+  if ((TTS_PROVIDER_IDS as readonly string[]).includes(analysisProvider))
+    return analysisProvider;
   if (prefs.qwenApiKey?.trim()) return "qwen";
+  if (prefs.minimaxApiKey?.trim()) return "minimax";
   if (prefs.mimoApiKey?.trim()) return "mimo";
-  return "openai"; // none set → resolveTtsConfig throws a clear MissingKeyError
+  if (prefs.geminiApiKey?.trim()) return "gemini";
+  if (prefs.openaiApiKey?.trim()) return "openai";
+  return "qwen"; // none set → resolveTtsConfig throws a clear MissingKeyError
 }
 
 export function resolveTtsConfig(
@@ -26,8 +42,40 @@ export function resolveTtsConfig(
     return {
       provider,
       apiKey: prefs.openaiApiKey,
-      voice: prefs.openaiTtsVoice || "alloy",
-      model: "gpt-4o-mini-tts",
+      voice: prefs.openaiTtsVoice || DEFAULT_TTS_VOICES.openai,
+      model: knownModelOrDefault(
+        prefs.openaiTtsModel,
+        TTS_MODELS.openai,
+        DEFAULT_TTS_MODELS.openai,
+      ),
+    };
+  }
+  if (provider === "gemini") {
+    if (!prefs.geminiApiKey) throw new MissingKeyError("gemini");
+    return {
+      provider,
+      apiKey: prefs.geminiApiKey,
+      voice: prefs.geminiTtsVoice || DEFAULT_TTS_VOICES.gemini,
+      model: knownModelOrDefault(
+        prefs.geminiTtsModel,
+        TTS_MODELS.gemini,
+        DEFAULT_TTS_MODELS.gemini,
+      ),
+      baseURL: GEMINI_TTS_BASE,
+    };
+  }
+  if (provider === "minimax") {
+    if (!prefs.minimaxApiKey) throw new MissingKeyError("minimax");
+    return {
+      provider,
+      apiKey: prefs.minimaxApiKey,
+      voice: prefs.minimaxTtsVoiceId || DEFAULT_TTS_VOICES.minimax,
+      model: knownModelOrDefault(
+        prefs.minimaxTtsModel,
+        TTS_MODELS.minimax,
+        DEFAULT_TTS_MODELS.minimax,
+      ),
+      baseURL: prefs.minimaxTtsBaseURL?.trim() || MINIMAX_TTS_BASE,
     };
   }
   if (provider === "mimo") {
@@ -35,19 +83,27 @@ export function resolveTtsConfig(
     return {
       provider,
       apiKey: prefs.mimoApiKey,
-      voice: prefs.mimoTtsVoice || "Chloe",
-      model: "mimo-v2.5-tts",
+      voice: prefs.mimoTtsVoice || DEFAULT_TTS_VOICES.mimo,
+      model: knownModelOrDefault(
+        prefs.mimoTtsModel,
+        TTS_MODELS.mimo,
+        DEFAULT_TTS_MODELS.mimo,
+      ),
       baseURL: prefs.mimoBaseURL?.trim() || MIMO_BASE,
     };
   }
   if (!prefs.qwenApiKey) throw new MissingKeyError("qwen");
   const region = prefs.qwenRegion === "intl" ? "intl" : "beijing";
-  const base = QWEN_BASE[region].replace("/compatible-mode/v1", "/api/v1");
+  const base = QWEN_TTS_BASE[region];
   return {
     provider,
     apiKey: prefs.qwenApiKey,
-    voice: prefs.qwenTtsVoice || "Cherry",
-    model: "qwen3-tts-flash",
+    voice: prefs.qwenTtsVoice || DEFAULT_TTS_VOICES.qwen,
+    model: knownModelOrDefault(
+      prefs.qwenTtsModel,
+      TTS_MODELS.qwen,
+      DEFAULT_TTS_MODELS.qwen,
+    ),
     baseURL: base,
   };
 }
