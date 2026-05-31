@@ -26,8 +26,9 @@ Most tools either read text aloud flatly or drill isolated words. Say It Right t
 
 - **Analyze Selection** — highlight English text in any app, trigger the command (pairs nicely with a global hotkey), and see how to say it.
 - **Practice a Sentence** — type or paste a line directly.
+- **Translate Selection** — highlight or paste text and get a meaning-first translation using the same provider setup and translation cache.
 
-Both open the same coaching view, with every action available in the `⌘K` action panel:
+The coaching commands open the same practice view, with every action available in the `⌘K` action panel:
 
 | Action                            | Shortcut      |
 | --------------------------------- | ------------- |
