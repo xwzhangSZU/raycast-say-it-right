@@ -18,12 +18,14 @@ describe("resolveAnalysisConfig", () => {
     expect(c.baseURL).toBe("https://api.openai.com/v1");
     expect(c.model).toBe("gpt-5.5");
   });
-  it("builds Qwen config on the Token Plan base URL", () => {
+  it("builds Qwen config on the Anthropic Token Plan base URL", () => {
     const c = resolveAnalysisConfig("qwen", {
       qwenAnalysisApiKey: "sk-sp",
     });
-    expect(c.baseURL).toBe(QWEN_BASE.compatible);
+    expect(c.baseURL).toBe(QWEN_BASE.anthropic);
     expect(c.model).toBe("qwen3.6-flash");
+    expect(c.apiProtocol).toBe("anthropic");
+    expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
   it("Qwen analysis can target a separate Token Plan endpoint + key", () => {
     const c = resolveAnalysisConfig("qwen", {
@@ -51,9 +53,9 @@ describe("resolveAnalysisConfig", () => {
       resolveAnalysisConfig("qwen", { qwenApiKey: "sk-dashscope" }),
     ).toThrow(MissingKeyError);
   });
-  it("sets enable_thinking:false in Qwen extraBody and no extraBody for OpenAI", () => {
+  it("sets Anthropic thinking disabled for default Qwen and no extraBody for OpenAI", () => {
     const qwen = resolveAnalysisConfig("qwen", { qwenAnalysisApiKey: "sk-sp" });
-    expect(qwen.extraBody).toEqual({ enable_thinking: false });
+    expect(qwen.extraBody).toEqual({ thinking: { type: "disabled" } });
     const openai = resolveAnalysisConfig("openai", { openaiApiKey: "sk" });
     expect(openai.extraBody).toBeUndefined();
   });
