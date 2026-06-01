@@ -34,6 +34,8 @@ type ExtensionPreferences = {
   "minimaxApiKey"?: string,
   /** MiniMax Analysis Base URL - MiniMax Token Plan Anthropic-compatible endpoint (ANTHROPIC_BASE_URL). */
   "minimaxBaseURL": string,
+  /** MiniMax Analysis Model - MiniMax text model used for analysis and translation. TTS uses the separate speech model below. */
+  "minimaxAnalysisModel": "MiniMax-M3",
   /** MiniMax TTS Base URL - MiniMax TTS base URL. */
   "minimaxTtsBaseURL": string,
   /** MiniMax TTS Model - MiniMax TTS model used for read-aloud. */
