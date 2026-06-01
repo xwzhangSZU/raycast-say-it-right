@@ -7,4 +7,5 @@
 - Single word selected → generates a natural example sentence to practice
 - Neural TTS model reading via OpenAI (`gpt-4o-mini-tts`) or Qwen (`qwen3-tts-flash`), with slow playback and instant repeat
 - Switch analysis provider on the fly, including updated built-in MiniMax M3 support through the Anthropic-compatible endpoint
+- Expose MiniMax's analysis model in preferences so the built-in `MiniMax-M3` default is visible next to the MiniMax endpoint
 - Manual text input fallback when nothing is selected

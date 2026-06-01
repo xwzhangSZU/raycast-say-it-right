@@ -318,6 +318,20 @@
       "default": "https://api.minimaxi.com/anthropic"
     },
     {
+      "name": "minimaxAnalysisModel",
+      "title": "MiniMax Analysis Model",
+      "description": "MiniMax text model used for analysis and translation. TTS uses the separate speech model below.",
+      "type": "dropdown",
+      "required": false,
+      "default": "MiniMax-M3",
+      "data": [
+        {
+          "title": "MiniMax-M3 — recommended",
+          "value": "MiniMax-M3"
+        }
+      ]
+    },
+    {
       "name": "minimaxTtsBaseURL",
       "title": "MiniMax TTS Base URL",
       "description": "MiniMax TTS base URL.",
