@@ -2,6 +2,7 @@ export interface TranslationRenderState {
   translation?: string;
   targetLanguageTitle?: string;
   failed?: boolean;
+  errorMessage?: string;
 }
 
 export interface TranslationRenderOptions {
@@ -27,10 +28,18 @@ export function renderTranslationMarkdown(
   lines.push("");
   if (state.translation) {
     lines.push(state.translation);
+    if (state.failed && state.errorMessage) {
+      lines.push("");
+      lines.push(`_Refresh failed: ${state.errorMessage}_`);
+    }
   } else if (state.failed) {
     lines.push(
       `_${options.emptyLabel ?? "Could not translate this text. Use Refresh Translation to try again."}_`,
     );
+    if (state.errorMessage) {
+      lines.push("");
+      lines.push(`_Error: ${state.errorMessage}_`);
+    }
   } else {
     lines.push("_Translating..._");
   }
