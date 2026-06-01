@@ -39,7 +39,7 @@ type ExtensionPreferences = {
   /** MiniMax TTS Base URL - MiniMax TTS base URL. */
   "minimaxTtsBaseURL": string,
   /** MiniMax TTS Model - MiniMax TTS model used for read-aloud. */
-  "minimaxTtsModel": "speech-2.8-turbo" | "speech-2.8-hd",
+  "minimaxTtsModel": "speech-2.8-hd" | "speech-2.8-turbo",
   /** MiniMax TTS Voice - Voice ID for MiniMax TTS. */
   "minimaxTtsVoiceId": "English_expressive_narrator" | "English_CaptivatingStoryteller" | "English_Trustworth_Man" | "English_SereneWoman" | "English_WiseScholar",
   /** Gemini API Key - Google AI Studio key for Gemini analysis and TTS. */

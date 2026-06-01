@@ -58,7 +58,7 @@ export const ANALYSIS_MODELS: Record<ProviderName, readonly ModelOption[]> = {
 
 export const DEFAULT_TTS_MODELS: Record<TtsProviderName, string> = {
   qwen: "qwen3-tts-flash",
-  minimax: "speech-2.8-turbo",
+  minimax: "speech-2.8-hd",
   mimo: "mimo-v2.5-tts",
   gemini: "gemini-3.1-flash-tts-preview",
   openai: "gpt-4o-mini-tts",
@@ -70,8 +70,8 @@ export const TTS_MODELS: Record<TtsProviderName, readonly ModelOption[]> = {
     { id: "qwen3-tts-instruct-flash", title: "Qwen3 TTS Instruct Flash" },
   ],
   minimax: [
-    { id: "speech-2.8-turbo", title: "Speech 2.8 Turbo" },
     { id: "speech-2.8-hd", title: "Speech 2.8 HD" },
+    { id: "speech-2.8-turbo", title: "Speech 2.8 Turbo" },
   ],
   mimo: [{ id: "mimo-v2.5-tts", title: "MiMo V2.5 TTS" }],
   gemini: [
