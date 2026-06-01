@@ -44,6 +44,32 @@ describe("synthesizeMinimax", () => {
     expect(init.body).toContain("\"output_format\":\"hex\"");
   });
 
+  it("passes the requested playback rate to MiniMax speed", async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          data: { audio: Buffer.from("slow").toString("hex") },
+          base_resp: { status_code: 0 },
+        }),
+    })) as unknown as typeof fetch;
+
+    await synthesizeMinimax(
+      "Hello there.",
+      { rate: 0.5, instructions: "read slowly" },
+      cfg,
+      fetchImpl,
+    );
+
+    const body = JSON.parse(
+      (
+        fetchImpl as unknown as { mock: { calls: [string, RequestInit][] } }
+      ).mock.calls[0][1].body as string,
+    ) as { voice_setting: { speed: number } };
+    expect(body.voice_setting.speed).toBe(0.5);
+  });
+
   it("throws TtsError on provider error", async () => {
     const fetchImpl = vi.fn(async () => ({
       ok: true,

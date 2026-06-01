@@ -10,7 +10,7 @@ interface MinimaxTtsResponse {
 
 export async function synthesizeMinimax(
   text: string,
-  _opts: SynthesizeOptions,
+  opts: SynthesizeOptions,
   cfg: TtsConfig,
   fetchImpl: typeof fetch = fetch,
 ): Promise<SynthResult> {
@@ -30,7 +30,7 @@ export async function synthesizeMinimax(
         stream: false,
         voice_setting: {
           voice_id: cfg.voice,
-          speed: 1,
+          speed: opts.rate,
           vol: 1,
           pitch: 0,
         },
