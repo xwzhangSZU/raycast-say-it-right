@@ -15,10 +15,27 @@ describe("renderTranslationMarkdown", () => {
   });
 
   it("shows failed state without losing the source", () => {
-    const out = renderTranslationMarkdown("hello", { failed: true });
+    const out = renderTranslationMarkdown("hello", {
+      failed: true,
+      errorMessage: "Chat API 429: quota exceeded",
+    });
 
     expect(out).toContain("> hello");
     expect(out).toContain("Could not translate");
+    expect(out).toContain("Chat API 429: quota exceeded");
+  });
+
+  it("keeps the previous translation visible when refresh fails", () => {
+    const out = renderTranslationMarkdown("hello", {
+      translation: "你好",
+      targetLanguageTitle: "Chinese Simplified",
+      failed: true,
+      errorMessage: "Chat API 503: overloaded",
+    });
+
+    expect(out).toContain("你好");
+    expect(out).toContain("Refresh failed");
+    expect(out).toContain("Chat API 503: overloaded");
   });
 
   it("renders intent-expression labels", () => {

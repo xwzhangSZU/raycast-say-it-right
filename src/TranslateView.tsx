@@ -36,6 +36,7 @@ interface TranslationState {
   targetLanguageTitle?: string;
   isLoading?: boolean;
   failed?: boolean;
+  errorMessage?: string;
 }
 
 export function TranslateView({
@@ -137,7 +138,11 @@ function TranslateViewInner({
     async (forceFresh = false) => {
       const generation = ++generationRef.current;
       if (!source) {
-        setState({ isLoading: false, failed: true });
+        setState({
+          isLoading: false,
+          failed: true,
+          errorMessage: "No source text was provided.",
+        });
         return;
       }
 
@@ -154,16 +159,23 @@ function TranslateViewInner({
         promptMode: mode === "express-intent" ? mode : undefined,
       });
 
-      setState({
+      setState((previous) => ({
+        ...(forceFresh ? { translation: previous.translation } : {}),
         isLoading: true,
         failed: false,
         targetLanguageTitle: target.title,
-      });
+        errorMessage: undefined,
+      }));
 
       const cached = forceFresh ? null : readTranslationCache(key);
       if (cached) {
         if (generation === generationRef.current) {
-          setState({ ...cached, isLoading: false });
+          setState({
+            ...cached,
+            isLoading: false,
+            failed: false,
+            errorMessage: undefined,
+          });
         }
         return;
       }
@@ -176,15 +188,22 @@ function TranslateViewInner({
         });
         writeTranslationCache(key, result);
         if (generation === generationRef.current) {
-          setState({ ...result, isLoading: false });
+          setState({
+            ...result,
+            isLoading: false,
+            failed: false,
+            errorMessage: undefined,
+          });
         }
       } catch (err) {
         if (generation === generationRef.current) {
-          setState({
+          setState((previous) => ({
+            ...(forceFresh ? { translation: previous.translation } : {}),
             isLoading: false,
             failed: true,
             targetLanguageTitle: target.title,
-          });
+            errorMessage: formatTranslationError(err),
+          }));
         }
         await reportError(err);
       }
@@ -327,4 +346,14 @@ function TranslateViewInner({
       }
     />
   );
+}
+
+function formatTranslationError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  return raw
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted key]")
+    .replace(/sk-[0-9A-Za-z_-]{12,}/g, "[redacted key]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 240);
 }
