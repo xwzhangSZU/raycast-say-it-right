@@ -44,7 +44,10 @@ export const ANALYSIS_MODELS: Record<ProviderName, readonly ModelOption[]> = {
     { id: "qwen3.6-flash", title: "Qwen 3.6 Flash" },
     { id: "qwen3.6-plus", title: "Qwen 3.6 Plus" },
   ],
-  minimax: [{ id: "MiniMax-M3", title: "M3" }],
+  minimax: [
+    { id: "MiniMax-M3", title: "M3" },
+    { id: "MiniMax-M2.7-highspeed", title: "M2.7 Highspeed" },
+  ],
   mimo: [
     { id: "mimo-v2.5", title: "V2.5" },
     { id: "mimo-v2.5-pro", title: "V2.5 Pro" },
