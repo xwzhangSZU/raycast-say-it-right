@@ -349,15 +349,15 @@
       "description": "MiniMax TTS model used for read-aloud.",
       "type": "dropdown",
       "required": false,
-      "default": "speech-2.8-turbo",
+      "default": "speech-2.8-hd",
       "data": [
-        {
-          "title": "Speech 2.8 Turbo",
-          "value": "speech-2.8-turbo"
-        },
         {
           "title": "Speech 2.8 HD",
           "value": "speech-2.8-hd"
+        },
+        {
+          "title": "Speech 2.8 Turbo",
+          "value": "speech-2.8-turbo"
         }
       ]
     },

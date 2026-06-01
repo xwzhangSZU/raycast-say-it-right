@@ -64,7 +64,6 @@ describe("resolveTtsConfig", () => {
     const c = resolveTtsConfig("minimax", {
       minimaxApiKey: "sk-mm",
       minimaxTtsVoiceId: "English_WiseScholar",
-      minimaxTtsModel: "speech-2.8-hd",
     });
     expect(c.model).toBe("speech-2.8-hd");
     expect(c.voice).toBe("English_WiseScholar");

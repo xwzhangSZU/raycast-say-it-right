@@ -50,7 +50,7 @@ The action panel also includes direct pickers for **analysis provider**, **analy
 Open the extension's preferences and add **at least one** API key:
 
 - **Qwen Token Plan + DashScope** — analysis (`qwen3.6-flash`, `qwen3.6-plus`) uses the Token Plan Anthropic base URL (`https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic` by default). Speech (`qwen3-tts-flash`, `qwen3-tts-instruct-flash`) uses a separate DashScope key and region.
-- **MiniMax** — analysis (`MiniMax-M3` or `MiniMax-M2.7-highspeed`) through the recommended Anthropic-compatible endpoint (`https://api.minimaxi.com/anthropic`) and speech (`speech-2.8-turbo`, `speech-2.8-hd`).
+- **MiniMax** — analysis (`MiniMax-M3` or `MiniMax-M2.7-highspeed`) through the recommended Anthropic-compatible endpoint (`https://api.minimaxi.com/anthropic`) and speech (`speech-2.8-hd` by default, with `speech-2.8-turbo` still selectable).
 - **MiMo / Xiaomi** — analysis (`mimo-v2.5`, `mimo-v2.5-pro`) uses the Token Plan Anthropic endpoint (`https://token-plan-cn.xiaomimimo.com/anthropic` by default). Speech (`mimo-v2.5-tts`) maps the same cluster to its OpenAI-compatible `/v1` endpoint.
 - **Gemini** — analysis (`gemini-3.5-flash`) and speech (`gemini-3.1-flash-tts-preview`).
 - **OpenAI** — analysis (`gpt-5.5`) and speech (`gpt-4o-mini-tts`).

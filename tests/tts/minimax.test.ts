@@ -7,7 +7,7 @@ const cfg: TtsConfig = {
   provider: "minimax",
   apiKey: "sk-mm",
   voice: "English_expressive_narrator",
-  model: "speech-2.8-turbo",
+  model: "speech-2.8-hd",
   baseURL: "https://api.minimaxi.com/v1",
 };
 
@@ -40,6 +40,7 @@ describe("synthesizeMinimax", () => {
       "Bearer sk-mm",
     );
     expect(init.body).toContain("English_expressive_narrator");
+    expect(init.body).toContain("\"model\":\"speech-2.8-hd\"");
     expect(init.body).toContain("\"output_format\":\"hex\"");
   });
 
