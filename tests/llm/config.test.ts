@@ -87,10 +87,10 @@ describe("resolveAnalysisConfig", () => {
     });
     expect(override.model).toBe("gemini-3.5-flash");
   });
-  it("builds MiniMax config: Anthropic-compatible, high-speed default, thinking off", () => {
+  it("builds MiniMax config: Anthropic-compatible, M3 default, thinking off", () => {
     const c = resolveAnalysisConfig("minimax", { minimaxApiKey: "sk-mm" });
     expect(c.baseURL).toBe(MINIMAX_BASE);
-    expect(c.model).toBe("MiniMax-M2.7-highspeed");
+    expect(c.model).toBe("MiniMax-M3");
     expect(c.apiProtocol).toBe("anthropic");
     expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
