@@ -94,6 +94,13 @@ describe("resolveAnalysisConfig", () => {
     expect(c.apiProtocol).toBe("anthropic");
     expect(c.extraBody).toEqual({ thinking: { type: "disabled" } });
   });
+  it("allows MiniMax M2.7 highspeed as an analysis model override", () => {
+    const c = resolveAnalysisConfig("minimax", {
+      minimaxApiKey: "sk-mm",
+      minimaxAnalysisModel: "MiniMax-M2.7-highspeed",
+    });
+    expect(c.model).toBe("MiniMax-M2.7-highspeed");
+  });
   it("builds MiMo config on the Anthropic Token Plan base URL", () => {
     const c = resolveAnalysisConfig("mimo", { mimoApiKey: "tp-x" });
     expect(c.baseURL).toBe(MIMO_BASE);

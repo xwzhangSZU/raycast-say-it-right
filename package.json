@@ -328,6 +328,10 @@
         {
           "title": "MiniMax-M3 — recommended",
           "value": "MiniMax-M3"
+        },
+        {
+          "title": "MiniMax-M2.7-highspeed — previous fast model",
+          "value": "MiniMax-M2.7-highspeed"
         }
       ]
     },
