@@ -115,6 +115,13 @@ describe("resolveTtsConfig", () => {
 });
 
 describe("buildTtsInstructions", () => {
+  it("explains why the delivery must stay natural for TTS", () => {
+    const instructions = buildTtsInstructions(1);
+    expect(instructions).toContain("text-to-speech model");
+    expect(instructions).toContain("natural phrase groups");
+    expect(instructions).toContain("do not read document symbols");
+  });
+
   it("adds a slow-pace clause only when rate < 1", () => {
     expect(buildTtsInstructions(1)).not.toMatch(/slowly/);
     expect(buildTtsInstructions(0.5)).toContain("50%");

@@ -24,6 +24,8 @@ describe("translation prompt", () => {
 
     expect(prompt.system).toContain("meaning-first translator");
     expect(prompt.system).toContain("not as English syntax rewritten");
+    expect(prompt.system).toContain("Role:");
+    expect(prompt.system).toContain("Output use:");
     expect(prompt.user).toContain("Target language: Chinese Simplified.");
     expect(prompt.user).toContain("Could you turn it off?");
   });
@@ -50,8 +52,13 @@ describe("translation prompt", () => {
     expect(prompt.system).toContain("Do not add unsupported concessions");
     expect(prompt.system).toContain("Do not preserve Chinese word order");
     expect(prompt.system).toContain(
-      "Return only the final target-language wording",
+      "The result may be pasted into a message or read aloud by a text-to-speech model.",
     );
+    expect(prompt.system).toContain(
+      "avoid document-style symbols, and keep sentences short enough",
+    );
+    expect(prompt.system).toContain("Remove stiff, generic AI-sounding polish");
+    expect(prompt.system).toContain("Return only the final output");
     expect(prompt.user).toContain(
       "Task: Express the source intention naturally",
     );

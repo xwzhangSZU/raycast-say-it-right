@@ -142,11 +142,14 @@ export function resolveTtsConfig(
 }
 
 export function buildTtsInstructions(rate: number): string {
-  const base =
-    "Read this English sentence as a clear pronunciation model with a General American accent. Emphasize the stressed words, use natural rising and falling intonation, and pause briefly at commas.";
+  const base = [
+    "Purpose: this text will be spoken aloud by a text-to-speech model as a pronunciation model for learners.",
+    "Delivery: use a clear General American accent, natural phrase groups, rising and falling intonation, and brief pauses at commas.",
+    "Naturalness: emphasize stressed words, keep the delivery smooth and conversational, and do not read document symbols, Markdown markers, or headings as words.",
+  ].join(" ");
   if (rate >= 1) return base;
   const pct = Math.round(rate * 100);
-  return `${base} Speak slowly and deliberately, at about ${pct}% of normal speed, as a teaching example.`;
+  return `${base} Teaching pace: speak slowly and deliberately, at about ${pct}% of normal speed.`;
 }
 
 export function mimoTtsBaseURL(baseURL: string): string {
