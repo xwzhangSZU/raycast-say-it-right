@@ -55,6 +55,9 @@ const profileInstructions: Record<TranslationProfile, string> = {
     "Use natural spoken phrasing suitable for subtitles or dialogue. Keep sentences readable and avoid overly formal wording unless the source requires it.",
 };
 
+const DIRECT_OUTPUT_RULE =
+  "Return only the final output. Do not explain, annotate, quote the source, or wrap the answer in Markdown fences.";
+
 export function resolveTranslationTarget(
   preferredLanguage: string | undefined,
   text: string,
@@ -69,12 +72,17 @@ export function buildTranslationPrompt(request: TranslationRequest): {
 } {
   const mode = request.mode ?? "translate";
   const system = [
-    systemRole(mode),
-    "Before writing the answer, internally infer the speaker's intent, situation, relationship, implied tone, and practical purpose.",
-    nativeExpressionInstruction(request.targetLanguageTitle),
-    taskInstruction(mode),
-    `Return only the ${mode === "express-intent" ? "final target-language wording" : "translation"}. Do not explain, annotate, quote the source, or wrap the answer in Markdown fences.`,
-  ].join(" ");
+    `Role:\n${systemRole(mode)}`,
+    [
+      "Internal context check:",
+      "Before writing the answer, internally infer the speaker's intent, situation, relationship, implied tone, and practical purpose.",
+      "Use that inference only to choose wording; do not reveal this analysis.",
+    ].join("\n"),
+    `Natural target-language standard:\n${nativeExpressionInstruction(request.targetLanguageTitle)}`,
+    `Task rules:\n${taskInstruction(mode)}`,
+    `Output use:\n${outputUseInstruction(mode)}`,
+    `Output format:\n${DIRECT_OUTPUT_RULE}`,
+  ].join("\n\n");
 
   const user = [
     `Target language: ${request.targetLanguageTitle}.`,
@@ -146,7 +154,7 @@ function systemRole(mode: TranslationPromptMode): string {
 
 function taskInstruction(mode: TranslationPromptMode): string {
   if (mode === "express-intent") {
-    return [
+    return asBullets([
       "Treat the source as the user's intended meaning, not as a sentence that must be mirrored.",
       "Write the result as something a native speaker of the target language would actually say or write in that situation.",
       "Choose natural collocations, register, directness, and sentence shape for the target culture.",
@@ -157,7 +165,7 @@ function taskInstruction(mode: TranslationPromptMode): string {
       "Do not add unsupported concessions, excuses, alternatives, placeholder names, greetings, sign-offs, apologies, or promises merely to sound natural.",
       "Do not preserve Chinese word order, topic-comment structure, stock phrases, or literal politeness formulas unless they are genuinely natural in the target language.",
       "Do not invent new facts, promises, relationships, or emotional intensity that are not supported by the intention.",
-    ].join(" ");
+    ]);
   }
   return "Translate complete sentences and paragraphs by meaning, not as isolated dictionary entries.";
 }
@@ -184,7 +192,26 @@ function nativeExpressionInstruction(targetLanguageTitle: string): string {
       "Avoid source-language calques and over-formal phrasing when a native speaker would choose a simpler expression.",
     );
   }
-  return instructions.join(" ");
+  return asBullets(instructions);
+}
+
+function outputUseInstruction(mode: TranslationPromptMode): string {
+  if (mode === "express-intent") {
+    return [
+      "The result may be pasted into a message or read aloud by a text-to-speech model.",
+      "Use plain text, avoid document-style symbols, and keep sentences short enough to sound natural when spoken.",
+      "Remove stiff, generic AI-sounding polish; keep the human intent concrete and direct.",
+    ].join(" ");
+  }
+  return [
+    "The result should be clean copy-ready text.",
+    "Avoid document-style symbols unless they are needed to preserve an explicit source list, code block, citation, or table-like structure.",
+    "For conversational source text, prefer shorter sentences that would sound natural if read aloud.",
+  ].join(" ");
+}
+
+function asBullets(items: string[]): string {
+  return items.map((item) => `- ${item}`).join("\n");
 }
 
 function stripMarkdownFence(value: string): string {

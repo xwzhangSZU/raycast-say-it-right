@@ -3,6 +3,18 @@ import { buildPrompt, parseAnalysis } from "../../src/llm/prompt";
 import { EXAMPLE } from "../../src/__fixtures__/analysis";
 
 describe("buildPrompt", () => {
+  it("uses labeled sections for the repeated prompt template", () => {
+    const { system } = buildPrompt("give me a call", {
+      isWord: false,
+      accent: "GA",
+    });
+    expect(system).toContain("Role:");
+    expect(system).toContain("Task:");
+    expect(system).toContain("Accuracy requirements:");
+    expect(system).toContain("Output format:");
+    expect(system).toContain("Example:");
+  });
+
   it("asks to generate an example for single-word input", () => {
     const { user } = buildPrompt("serendipity", { isWord: true, accent: "GA" });
     expect(user).toContain("single word");
