@@ -9,9 +9,9 @@
 
 type ExtensionPreferences = {
   /** Defaults: Coach Provider - Initial provider for pronunciation analysis and natural-English expression. You can change provider and model per run from the Action Panel. */
-  "defaultAnalysisProvider": "qwen" | "minimax" | "mimo" | "gemini" | "openai",
+  "defaultAnalysisProvider": "qwen" | "mimo" | "gemini" | "openai",
   /** Defaults: Voice Provider - Initial provider for model audio. Follow Coach Provider uses the coach provider when its voice key is set, otherwise the first configured voice provider. */
-  "ttsProvider": "follow-analysis" | "qwen" | "minimax" | "mimo" | "gemini" | "openai",
+  "ttsProvider": "follow-analysis" | "qwen" | "mimo" | "gemini" | "openai",
   /** Qwen Coach: Token Plan API Key - Used only for Qwen coaching, expression, and pronunciation analysis. Qwen Voice uses the separate DashScope key below. */
   "qwenAnalysisApiKey"?: string,
   /** Qwen Coach: Model - Qwen text model used for pronunciation analysis and natural-English expression. */
@@ -24,14 +24,6 @@ type ExtensionPreferences = {
   "qwenTtsModel": "qwen3-tts-flash" | "qwen3-tts-instruct-flash",
   /** Qwen Voice: Voice - Voice for Qwen TTS (all support English). */
   "qwenTtsVoice": "Jennifer" | "Aiden" | "Neil" | "Elias" | "Cherry" | "Katerina" | "Ethan" | "Ryan" | "Nofish",
-  /** MiniMax: API Key - Used for both MiniMax Coach and MiniMax Voice. */
-  "minimaxApiKey"?: string,
-  /** MiniMax Coach: Model - MiniMax text model used for pronunciation analysis and natural-English expression. Voice uses the separate speech model below. */
-  "minimaxAnalysisModel": "MiniMax-M3" | "MiniMax-M2.7-highspeed",
-  /** MiniMax Voice: Model - MiniMax TTS model used for read-aloud. */
-  "minimaxTtsModel": "speech-2.8-hd" | "speech-2.8-turbo",
-  /** MiniMax Voice: Voice - Voice ID for MiniMax TTS. */
-  "minimaxTtsVoiceId": "English_expressive_narrator" | "English_CaptivatingStoryteller" | "English_Trustworth_Man" | "English_SereneWoman" | "English_WiseScholar",
   /** MiMo: Token Plan API Key - Xiaomi MiMo Token Plan key (tp-...). Used for both MiMo Coach and MiMo Voice. */
   "mimoApiKey"?: string,
   /** MiMo Coach: Model - MiMo text model used for pronunciation analysis and natural-English expression. */
@@ -58,10 +50,6 @@ type ExtensionPreferences = {
   "loopGap": string,
   /** Advanced: Qwen Coach Base URL - Token Plan base URL for Qwen coaching. The default is Anthropic-compatible; OpenAI-compatible /compatible-mode/v1 is also supported. */
   "qwenAnalysisBaseURL": string,
-  /** Advanced: MiniMax Coach Base URL - Anthropic-compatible endpoint for MiniMax coaching and expression. */
-  "minimaxBaseURL": string,
-  /** Advanced: MiniMax Voice Base URL - MiniMax TTS base URL for model audio. */
-  "minimaxTtsBaseURL": string,
   /** Advanced: MiMo Coach Base URL - Anthropic-compatible base URL for MiMo coaching. MiMo Voice uses the matching Token Plan /v1 endpoint because the Anthropic messages endpoint does not return audio. */
   "mimoBaseURL": string
 }
