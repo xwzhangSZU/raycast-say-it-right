@@ -70,6 +70,26 @@ describe("synthesizeQwen", () => {
     expect(init.body).toContain("qwen3-tts-instruct-flash");
     expect(init.body).toContain("speak slowly");
   });
+  it("sends instructions when the configured Qwen model is instruct", async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        output: { audio: { data: Buffer.from("x").toString("base64") } },
+      }),
+    })) as unknown as typeof fetch;
+    await synthesizeQwen(
+      "hi",
+      { rate: 1, instructions: "read with contrastive stress" },
+      { ...cfg, model: "qwen3-tts-instruct-flash" },
+      fetchImpl,
+    );
+    const [, init] = (
+      fetchImpl as unknown as { mock: { calls: [string, RequestInit][] } }
+    ).mock.calls[0];
+    expect(init.body).toContain("qwen3-tts-instruct-flash");
+    expect(init.body).toContain("read with contrastive stress");
+  });
   it("throws a clear error when the audio URL download is non-2xx", async () => {
     const fetchImpl = vi
       .fn()

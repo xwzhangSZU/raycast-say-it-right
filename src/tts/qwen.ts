@@ -10,13 +10,17 @@ export async function synthesizeQwen(
   fetchImpl: typeof fetch = fetch,
 ): Promise<SynthResult> {
   const base = cfg.baseURL ?? "https://dashscope.aliyuncs.com/api/v1";
-  const styled = opts.rate < 1;
-  const model = styled ? "qwen3-tts-instruct-flash" : cfg.model;
+  const instruct = opts.rate < 1 || cfg.model === "qwen3-tts-instruct-flash";
+  const model = instruct ? "qwen3-tts-instruct-flash" : cfg.model;
   const body: Record<string, unknown> = {
     model,
-    input: { text, voice: cfg.voice, language_type: "English" },
+    input: {
+      text,
+      voice: cfg.voice,
+      language_type: "English",
+      ...(instruct ? { instructions: opts.instructions } : {}),
+    },
   };
-  if (styled) body.parameters = { instructions: opts.instructions };
 
   let res: Awaited<ReturnType<typeof fetch>>;
   try {

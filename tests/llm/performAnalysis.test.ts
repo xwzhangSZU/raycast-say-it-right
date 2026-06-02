@@ -81,6 +81,23 @@ describe("performAnalysis", () => {
     expect(sinks.setAnalysis).toHaveBeenCalledWith(cached);
   });
 
+  it("can return a cached result before requiring an API key", async () => {
+    const cached = fakeAnalysis("cached-without-key");
+    const io = makeIo({ readCache: vi.fn(() => cached) });
+    const sinks = makeSinks();
+
+    await performAnalysis("cached-without-key", "openai", {
+      prefs: {},
+      isCurrent: () => true,
+      sinks,
+      io,
+    });
+
+    expect(io.analyze).not.toHaveBeenCalled();
+    expect(io.reportError).not.toHaveBeenCalled();
+    expect(sinks.setAnalysis).toHaveBeenCalledWith(cached);
+  });
+
   it("discards a stale analysis result once it is no longer current", async () => {
     const sinks = makeSinks();
     let resolveAnalyze!: (a: ProsodyAnalysis) => void;

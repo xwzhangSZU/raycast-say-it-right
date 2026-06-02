@@ -5,6 +5,11 @@ import { alignColumns, type Col } from "./align";
 const MAX_WIDTH = 42; // max display columns per stave; keeps marks aligned above words (no independent wrap)
 const cpLen = (s: string): number => [...s].length;
 
+interface RenderAnalysisOptions {
+  includeTitle?: boolean;
+  sectionHeadingLevel?: 2 | 3 | 4;
+}
+
 function formatWord(w: Word): string {
   if (w.stressed && w.stressIndex !== null) {
     return w.syllables
@@ -52,7 +57,12 @@ function renderStaves(cols: Col[], gap = 2): string {
   return "```\n" + lines.join("\n") + "\n```";
 }
 
-export function renderAnalysis(a: ProsodyAnalysis): string {
+export function renderAnalysis(
+  a: ProsodyAnalysis,
+  options: RenderAnalysisOptions = {},
+): string {
+  const includeTitle = options.includeTitle !== false;
+  const subhead = "#".repeat(options.sectionHeadingLevel ?? 2);
   const intoCols: Col[] = [];
   a.thoughtGroups.forEach((g, gi) => {
     g.words.forEach((w) => {
@@ -88,19 +98,19 @@ export function renderAnalysis(a: ProsodyAnalysis): string {
   const legend = `${SYM.STRESS} stressed   ${SYM.WEAK} unstressed   ${SYM.RISE}${SYM.FALL} rising/falling tone   ${SYM.GROUP} pause   ${SYM.LINK} linking`;
 
   const lines: string[] = [];
-  lines.push("# 🗣️ How to say it");
+  if (includeTitle) lines.push("# 🗣️ How to say it");
   if (a.isGeneratedExample && a.sourceWord) {
     lines.push(`*Example sentence for **${a.sourceWord}**:*`);
   }
   lines.push(`> ${a.text}`);
   lines.push("");
-  lines.push("## Stress & Intonation");
+  lines.push(`${subhead} Stress & Intonation`);
   lines.push(renderStaves(intoCols));
   lines.push(`*${legend}*`);
   lines.push(`\`${a.ipa}\``);
   if (links.length) lines.push(`*linking:* ${links.join("  ·  ")}`);
   lines.push("");
-  lines.push("## Rhythm");
+  lines.push(`${subhead} Rhythm`);
   lines.push(renderStaves(beatCols));
   if (a.notes) {
     lines.push("");

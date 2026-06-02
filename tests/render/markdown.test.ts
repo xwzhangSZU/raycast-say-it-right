@@ -46,6 +46,15 @@ describe("renderAnalysis", () => {
     expect(out).toContain("Example sentence for");
     expect(out).toContain("**call**");
   });
+  it("can render as a nested page section without the top title", () => {
+    const out = renderAnalysis(EXAMPLE, {
+      includeTitle: false,
+      sectionHeadingLevel: 3,
+    });
+    expect(out).not.toContain("# 🗣️ How to say it");
+    expect(out).toContain("### Stress & Intonation");
+    expect(out).toContain("### Rhythm");
+  });
   it("includes a legend explaining the marks", () => {
     expect(md).toContain("stressed");
     expect(md).toContain("unstressed");

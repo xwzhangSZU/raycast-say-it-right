@@ -8,44 +8,50 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Analysis Provider - Preferred provider when multiple API keys are set. If only one key is filled, that provider is used automatically. */
-  "defaultAnalysisProvider": "openai" | "qwen" | "gemini" | "mimo",
-  /** OpenAI API Key - Used for OpenAI analysis and TTS. */
-  "openaiApiKey"?: string,
-  /** OpenAI Analysis Model - Chat model for analysis. */
-  "openaiAnalysisModel": string,
-  /** OpenAI TTS Voice - Voice for OpenAI TTS. */
-  "openaiTtsVoice": "alloy" | "ash" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
-  /** Qwen (DashScope) API Key - Used for Qwen analysis and TTS. */
-  "qwenApiKey"?: string,
-  /** Qwen Region - DashScope region (affects base URL). */
-  "qwenRegion": "beijing" | "intl",
-  /** Qwen Analysis Model - Qwen chat model used for analysis. */
-  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.6-plus" | "qwen3.7-max",
-  /** Qwen Analysis Base URL - Optional OpenAI-compatible base URL for Qwen ANALYSIS only, e.g. Alibaba Token Plan: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1 . Empty = standard DashScope endpoint. TTS always uses the standard API. */
-  "qwenAnalysisBaseURL"?: string,
-  /** Qwen Analysis API Key - Optional separate key for Qwen ANALYSIS (e.g. a Token Plan sk-sp-… key). Falls back to the main Qwen key if empty. TTS always uses the main Qwen key. */
+  /** Defaults: Coach Provider - Initial provider for pronunciation analysis and natural-English expression. You can change provider and model per run from the Action Panel. */
+  "defaultAnalysisProvider": "qwen" | "mimo" | "gemini" | "openai",
+  /** Defaults: Voice Provider - Initial provider for model audio. Follow Coach Provider uses the coach provider when its voice key is set, otherwise the first configured voice provider. */
+  "ttsProvider": "follow-analysis" | "qwen" | "mimo" | "gemini" | "openai",
+  /** Qwen Coach: Token Plan API Key - Used only for Qwen coaching, expression, and pronunciation analysis. Qwen Voice uses the separate DashScope key below. */
   "qwenAnalysisApiKey"?: string,
-  /** Qwen TTS Voice - Voice for Qwen TTS (all support English). */
-  "qwenTtsVoice": "Cherry" | "Jennifer" | "Katerina" | "Ethan" | "Ryan" | "Elias" | "Nofish",
-  /** Gemini API Key - Google AI Studio key for Gemini analysis. Analysis only — Gemini does not do TTS here. */
-  "geminiApiKey"?: string,
-  /** Gemini Analysis Model - Gemini chat model for analysis. Default gemini-3.5-flash (best balance). For maximum accuracy try gemini-3.1-pro-preview; for always-latest use gemini-flash-latest. */
-  "geminiAnalysisModel": string,
-  /** MiMo (Xiaomi) API Key - Xiaomi MiMo key (tp-… for Token Plan, sk-… for pay-as-you-go). Used for MiMo analysis and TTS. */
+  /** Qwen Coach: Model - Qwen text model used for pronunciation analysis and natural-English expression. */
+  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.7-plus" | "qwen3.7-max",
+  /** Qwen Voice: DashScope API Key - Used only for Qwen voice playback. Qwen Coach uses the Token Plan key above. */
+  "qwenApiKey"?: string,
+  /** Qwen Voice: DashScope Region - DashScope region for Qwen voice playback. */
+  "qwenRegion": "beijing" | "intl",
+  /** Qwen Voice: Model - Qwen TTS model used for read-aloud. */
+  "qwenTtsModel": "qwen3-tts-flash" | "qwen3-tts-instruct-flash",
+  /** Qwen Voice: Voice - Voice for Qwen TTS (all support English). */
+  "qwenTtsVoice": "Jennifer" | "Aiden" | "Neil" | "Elias" | "Cherry" | "Katerina" | "Ethan" | "Ryan" | "Nofish",
+  /** MiMo: Token Plan API Key - Xiaomi MiMo Token Plan key (tp-...). Used for both MiMo Coach and MiMo Voice. */
   "mimoApiKey"?: string,
-  /** MiMo Base URL - OpenAI-compatible base URL. Pay-as-you-go: https://api.xiaomimimo.com/v1 (default). Token Plan: token-plan-{cn,sgp,ams}.xiaomimimo.com/v1 (see your 订阅管理 page). */
-  "mimoBaseURL": string,
-  /** MiMo Analysis Model - MiMo chat model for analysis (thinking is disabled for speed/determinism). */
+  /** MiMo Coach: Model - MiMo text model used for pronunciation analysis and natural-English expression. */
   "mimoAnalysisModel": "mimo-v2.5" | "mimo-v2.5-pro",
-  /** MiMo TTS Voice - Voice for MiMo TTS (English voices). */
+  /** MiMo Voice: Voice - Voice for MiMo TTS (English voices). */
   "mimoTtsVoice": "Chloe" | "Mia" | "Milo" | "Dean",
-  /** TTS Provider - Which provider synthesizes audio. */
-  "ttsProvider": "follow-analysis" | "openai" | "qwen" | "mimo",
-  /** Shadowing Loop Count - How many times the Shadowing Loop repeats the sentence. */
+  /** Gemini: API Key - Google AI Studio key for both Gemini Coach and Gemini Voice. */
+  "geminiApiKey"?: string,
+  /** Gemini Coach: Model - Gemini text model used for pronunciation analysis and natural-English expression. */
+  "geminiAnalysisModel": "gemini-3.5-flash" | "gemini-3.1-pro-preview" | "gemini-3.1-flash-lite" | "gemini-3-flash-preview",
+  /** Gemini Voice: Voice - Voice for Gemini TTS. */
+  "geminiTtsVoice": "Charon" | "Iapetus" | "Sulafat" | "Puck",
+  /** OpenAI: API Key - Used for both OpenAI Coach and OpenAI Voice. */
+  "openaiApiKey"?: string,
+  /** OpenAI Voice: Voice - Voice for OpenAI TTS. */
+  "openaiTtsVoice": "marin" | "cedar" | "coral" | "alloy" | "ash" | "ballad" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse",
+  /** Practice: Translation Target - Target language for Translate Sentence/Page inside the practice view. Standalone Say ... in English commands always target English. */
+  "translationTargetLanguage": "auto" | "zh-Hans" | "zh-Hant" | "en" | "ja" | "ko" | "fr" | "de" | "es" | "it" | "pt" | "ru" | "ar" | "hi" | "vi" | "th" | "id" | "tr" | "nl" | "pl",
+  /** Practice: Sentences Per Page - How many sentences are shown and analyzed together for long passages. */
+  "sentencesPerPage": string,
+  /** Practice: Shadowing Loop Count - How many times the Shadowing Loop repeats the sentence. */
   "loopCount": string,
-  /** Shadowing Loop Gap (seconds) - Pause between repeats in the Shadowing Loop. */
-  "loopGap": string
+  /** Practice: Shadowing Loop Gap - Pause between repeats in the Shadowing Loop. */
+  "loopGap": string,
+  /** Advanced: Qwen Coach Base URL - Token Plan base URL for Qwen coaching. The default is Anthropic-compatible; OpenAI-compatible /compatible-mode/v1 is also supported. */
+  "qwenAnalysisBaseURL": string,
+  /** Advanced: MiMo Coach Base URL - Anthropic-compatible base URL for MiMo coaching. MiMo Voice uses the matching Token Plan /v1 endpoint because the Anthropic messages endpoint does not return audio. */
+  "mimoBaseURL": string
 }
 
 /** Preferences accessible in all the extension's commands */
@@ -56,6 +62,14 @@ declare namespace Preferences {
   export type AnalyzeSelection = ExtensionPreferences & {}
   /** Preferences accessible in the `practice-sentence` command */
   export type PracticeSentence = ExtensionPreferences & {}
+  /** Preferences accessible in the `translate-selection` command */
+  export type TranslateSelection = ExtensionPreferences & {}
+  /** Preferences accessible in the `translate-clipboard` command */
+  export type TranslateClipboard = ExtensionPreferences & {}
+  /** Preferences accessible in the `translate-intent` command */
+  export type TranslateIntent = ExtensionPreferences & {}
+  /** Preferences accessible in the `saved-results` command */
+  export type SavedResults = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -63,5 +77,13 @@ declare namespace Arguments {
   export type AnalyzeSelection = {}
   /** Arguments passed to the `practice-sentence` command */
   export type PracticeSentence = {}
+  /** Arguments passed to the `translate-selection` command */
+  export type TranslateSelection = {}
+  /** Arguments passed to the `translate-clipboard` command */
+  export type TranslateClipboard = {}
+  /** Arguments passed to the `translate-intent` command */
+  export type TranslateIntent = {}
+  /** Arguments passed to the `saved-results` command */
+  export type SavedResults = {}
 }
 
