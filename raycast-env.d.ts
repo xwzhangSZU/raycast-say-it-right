@@ -15,7 +15,7 @@ type ExtensionPreferences = {
   /** Qwen Coach: Token Plan API Key - Used only for Qwen coaching, expression, and pronunciation analysis. Qwen Voice uses the separate DashScope key below. */
   "qwenAnalysisApiKey"?: string,
   /** Qwen Coach: Model - Qwen text model used for pronunciation analysis and natural-English expression. */
-  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.6-plus",
+  "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.7-plus" | "qwen3.7-max",
   /** Qwen Voice: DashScope API Key - Used only for Qwen voice playback. Qwen Coach uses the Token Plan key above. */
   "qwenApiKey"?: string,
   /** Qwen Voice: DashScope Region - DashScope region for Qwen voice playback. */
