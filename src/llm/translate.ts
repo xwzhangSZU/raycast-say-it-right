@@ -13,6 +13,7 @@ export type TranslationProfile =
   | "legal"
   | "subtitle";
 export type TranslationPromptMode = "translate" | "express-intent";
+export type ExpressionTone = "natural" | "casual" | "formal" | "concise";
 
 export interface TranslationRequest {
   text: string;
@@ -21,6 +22,7 @@ export interface TranslationRequest {
   style: TranslationStyle;
   promptProfile: TranslationProfile;
   mode?: TranslationPromptMode;
+  expressionTone?: ExpressionTone;
 }
 
 export interface TranslateTextOptions {
@@ -28,7 +30,15 @@ export interface TranslateTextOptions {
   mode?: TranslationPromptMode;
   style?: TranslationStyle;
   promptProfile?: TranslationProfile;
+  expressionTone?: ExpressionTone;
   fetchImpl?: typeof fetch;
+}
+
+export interface TranslateTextResult {
+  translation: string;
+  coaching?: string;
+  targetLanguage: string;
+  targetLanguageTitle: string;
 }
 
 const styleInstructions: Record<TranslationStyle, string> = {
@@ -58,6 +68,20 @@ const profileInstructions: Record<TranslationProfile, string> = {
 const DIRECT_OUTPUT_RULE =
   "Return only the final output. Do not explain, annotate, quote the source, or wrap the answer in Markdown fences.";
 
+const EXPRESSION_OUTPUT_RULE =
+  'Return ONLY a JSON object with this exact shape: {"expression": string, "why": string}. No Markdown fences. "expression" is the final English wording only. "why" is a Simplified Chinese coaching note formatted as 2-5 Markdown bullets, each starting with "- ".';
+
+const expressionToneInstructions: Record<ExpressionTone, string> = {
+  natural:
+    "Use the default everyday register a native English speaker would naturally use in this situation.",
+  casual:
+    "Make it more casual and conversational while keeping it clear and broadly understandable.",
+  formal:
+    "Make it more formal and professional without sounding stiff, bureaucratic, or robotic.",
+  concise:
+    "Make it concise and direct while preserving the meaning, practical constraints, and natural tone.",
+};
+
 export function resolveTranslationTarget(
   preferredLanguage: string | undefined,
   text: string,
@@ -80,15 +104,24 @@ export function buildTranslationPrompt(request: TranslationRequest): {
     ].join("\n"),
     `Natural target-language standard:\n${nativeExpressionInstruction(request.targetLanguageTitle)}`,
     `Task rules:\n${taskInstruction(mode)}`,
+    mode === "express-intent"
+      ? `Expression tone:\n${expressionToneInstructions[request.expressionTone ?? "natural"]}`
+      : "",
+    `SkillOpt-style validation gate:\n${validationGateInstruction(mode)}`,
     `Output use:\n${outputUseInstruction(mode)}`,
-    `Output format:\n${DIRECT_OUTPUT_RULE}`,
-  ].join("\n\n");
+    `Output format:\n${mode === "express-intent" ? EXPRESSION_OUTPUT_RULE : DIRECT_OUTPUT_RULE}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   const user = [
     `Target language: ${request.targetLanguageTitle}.`,
     `Task: ${mode === "express-intent" ? "Express the source intention naturally in the target language." : "Translate the source text by meaning."}`,
     `Style: ${styleInstructions[request.style]}`,
     `Prompt profile: ${profileInstructions[request.promptProfile]}`,
+    mode === "express-intent"
+      ? `Expression tone: ${expressionToneInstructions[request.expressionTone ?? "natural"]}`
+      : "",
     "Preserve names, URLs, inline code, citations, numbers, and list structure.",
     mode === "express-intent"
       ? "The source may be rough Chinese notes or an intention brief. Do not mirror its wording, sentence order, filler words, or Chinese politeness formulas when a native speaker would phrase the idea differently."
@@ -96,7 +129,9 @@ export function buildTranslationPrompt(request: TranslationRequest): {
     "",
     mode === "express-intent" ? "Intention:" : "Text:",
     request.text,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return { system, user };
 }
@@ -106,11 +141,7 @@ export async function translateText(
   cfg: ChatConfig,
   preferredLanguageOrOptions: string | TranslateTextOptions = "auto",
   fetchImpl: typeof fetch = fetch,
-): Promise<{
-  translation: string;
-  targetLanguage: string;
-  targetLanguageTitle: string;
-}> {
+): Promise<TranslateTextResult> {
   const options =
     typeof preferredLanguageOrOptions === "string"
       ? { preferredLanguage: preferredLanguageOrOptions, fetchImpl }
@@ -119,6 +150,7 @@ export async function translateText(
           mode: preferredLanguageOrOptions.mode,
           style: preferredLanguageOrOptions.style,
           promptProfile: preferredLanguageOrOptions.promptProfile,
+          expressionTone: preferredLanguageOrOptions.expressionTone,
           fetchImpl: preferredLanguageOrOptions.fetchImpl ?? fetch,
         };
   const mode = options.mode ?? "translate";
@@ -130,16 +162,22 @@ export async function translateText(
     style:
       options.style ?? (mode === "express-intent" ? "polished" : "balanced"),
     promptProfile: options.promptProfile ?? "general",
+    expressionTone: options.expressionTone,
     mode,
   });
-  const translation = await chatText(
+  const raw = await chatText(
     cfg,
     prompt.system,
     prompt.user,
     options.fetchImpl,
   );
+  const parsed =
+    mode === "express-intent"
+      ? parseExpressionCoachResult(raw)
+      : { expression: stripMarkdownFence(raw), why: undefined };
   return {
-    translation: stripMarkdownFence(translation),
+    translation: parsed.expression,
+    coaching: parsed.why,
     targetLanguage: target.language,
     targetLanguageTitle: target.title,
   };
@@ -155,6 +193,7 @@ function systemRole(mode: TranslationPromptMode): string {
 function taskInstruction(mode: TranslationPromptMode): string {
   if (mode === "express-intent") {
     return asBullets([
+      "Treat the prompt as a reusable skill artifact: follow these rules in order and do not invent a different task.",
       "Treat the source as the user's intended meaning, not as a sentence that must be mirrored.",
       "Write the result as something a native speaker of the target language would actually say or write in that situation.",
       "Choose natural collocations, register, directness, and sentence shape for the target culture.",
@@ -165,6 +204,7 @@ function taskInstruction(mode: TranslationPromptMode): string {
       "Do not add unsupported concessions, excuses, alternatives, placeholder names, greetings, sign-offs, apologies, or promises merely to sound natural.",
       "Do not preserve Chinese word order, topic-comment structure, stock phrases, or literal politeness formulas unless they are genuinely natural in the target language.",
       "Do not invent new facts, promises, relationships, or emotional intensity that are not supported by the intention.",
+      "Before final output, internally check the candidate against the validation gate. If any gate fails, revise the candidate once and output the repaired version.",
     ]);
   }
   return "Translate complete sentences and paragraphs by meaning, not as isolated dictionary entries.";
@@ -195,6 +235,23 @@ function nativeExpressionInstruction(targetLanguageTitle: string): string {
   return asBullets(instructions);
 }
 
+function validationGateInstruction(mode: TranslationPromptMode): string {
+  if (mode === "express-intent") {
+    return asBullets([
+      "Meaning gate: preserve the source intent, requested action, deadline, responsibility, and politeness level.",
+      "Naturalness gate: sound like native English, not Chinese syntax with English words.",
+      "No-addition gate: do not add greetings, apologies, excuses, concessions, relationships, placeholders, or promises unless the source requires them.",
+      "Speakability gate: keep the expression short and rhythmic enough to read aloud naturally for pronunciation practice.",
+      "Coaching gate: explain concrete wording, register, rhythm, or calque-avoidance choices in Simplified Chinese; avoid generic praise.",
+    ]);
+  }
+  return asBullets([
+    "Faithfulness gate: preserve the source meaning, names, numbers, links, code, citations, and list structure.",
+    "Naturalness gate: the target text reads as native writing rather than source-language syntax.",
+    "No-addition gate: do not add unsupported explanation, facts, or commentary.",
+  ]);
+}
+
 function outputUseInstruction(mode: TranslationPromptMode): string {
   if (mode === "express-intent") {
     return [
@@ -220,4 +277,79 @@ function stripMarkdownFence(value: string): string {
     .replace(/^```(?:\w+)?\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
+}
+
+function parseExpressionCoachResult(raw: string): {
+  expression: string;
+  why?: string;
+} {
+  const cleaned = extractJsonObject(raw);
+  try {
+    const parsed = JSON.parse(cleaned) as {
+      expression?: unknown;
+      rewritten?: unknown;
+      translation?: unknown;
+      why?: unknown;
+      coaching?: unknown;
+    };
+    const expression = firstString(
+      parsed.expression,
+      parsed.rewritten,
+      parsed.translation,
+    );
+    if (!expression) return { expression: stripMarkdownFence(raw) };
+    return {
+      expression,
+      why: firstString(parsed.why, parsed.coaching),
+    };
+  } catch {
+    return { expression: stripMarkdownFence(raw) };
+  }
+}
+
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function extractJsonObject(raw: string): string {
+  const stripped = raw
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+
+  if (stripped.startsWith("{") && stripped.endsWith("}")) return stripped;
+
+  const start = stripped.indexOf("{");
+  if (start === -1) return stripped;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < stripped.length; i++) {
+    const char = stripped[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === "{") depth++;
+    if (char === "}") {
+      depth--;
+      if (depth === 0) return stripped.slice(start, i + 1);
+    }
+  }
+  return stripped;
 }

@@ -11,6 +11,9 @@ describe("buildPrompt", () => {
     expect(system).toContain("Role:");
     expect(system).toContain("Task:");
     expect(system).toContain("Accuracy requirements:");
+    expect(system).toContain("SkillOpt-style validation gate:");
+    expect(system).toContain("Schema gate:");
+    expect(system).toContain("Prosody gate:");
     expect(system).toContain("Output format:");
     expect(system).toContain("Example:");
   });

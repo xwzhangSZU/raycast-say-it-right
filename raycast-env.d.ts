@@ -8,9 +8,9 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Default Analysis Provider - Initial provider for analysis and translation. You can change provider and model per run from the Action Panel. */
+  /** Default Coach Provider - Initial provider for pronunciation analysis and natural-English expression. You can change provider and model per run from the Action Panel. */
   "defaultAnalysisProvider": "qwen" | "minimax" | "mimo" | "gemini" | "openai",
-  /** Default TTS Provider - Initial provider for model audio. Follow Analysis Provider uses the analysis provider when its TTS key is set, otherwise the first configured TTS provider. */
+  /** Default Voice Provider - Initial provider for model audio. Follow Analysis Provider uses the analysis provider when its TTS key is set, otherwise the first configured TTS provider. */
   "ttsProvider": "follow-analysis" | "qwen" | "minimax" | "mimo" | "gemini" | "openai",
   /** OpenAI API Key - Used for OpenAI analysis and TTS. */
   "openaiApiKey"?: string,
@@ -54,7 +54,7 @@ type ExtensionPreferences = {
   "mimoAnalysisModel": "mimo-v2.5" | "mimo-v2.5-pro",
   /** MiMo TTS Voice - Voice for MiMo TTS (English voices). */
   "mimoTtsVoice": "Chloe" | "Mia" | "Milo" | "Dean",
-  /** Translation Target - Target language for Translate actions. Auto translates Chinese to English and other text to Simplified Chinese. */
+  /** Practice Translation Target - Target language for Translate Sentence/Page inside the practice view. Standalone Say ... in English commands always target English. */
   "translationTargetLanguage": "auto" | "zh-Hans" | "zh-Hant" | "en" | "ja" | "ko" | "fr" | "de" | "es" | "it" | "pt" | "ru" | "ar" | "hi" | "vi" | "th" | "id" | "tr" | "nl" | "pl",
   /** Sentences Per Page - How many sentences are shown and analyzed together for long passages. */
   "sentencesPerPage": string,

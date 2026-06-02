@@ -43,16 +43,19 @@ describe("renderTranslationMarkdown", () => {
       "我想委婉地催一下文件。",
       {
         translation: "Could you send me the file when you get a chance?",
+        coaching: "- `Could you` keeps the request polite and direct.",
         targetLanguageTitle: "English",
       },
       {
-        title: "Translation",
+        title: "Expression Coach",
         sourceTitle: "What You Mean",
       },
     );
 
-    expect(out).toContain("# Translation");
+    expect(out).toContain("# Expression Coach");
     expect(out).toContain("## What You Mean");
     expect(out).toContain("## English");
+    expect(out).toContain("## Why This Works");
+    expect(out).toContain("keeps the request polite");
   });
 });

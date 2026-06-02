@@ -26,6 +26,8 @@ describe("translation prompt", () => {
     expect(prompt.system).toContain("not as English syntax rewritten");
     expect(prompt.system).toContain("Role:");
     expect(prompt.system).toContain("Output use:");
+    expect(prompt.system).toContain("SkillOpt-style validation gate:");
+    expect(prompt.system).toContain("Return only the final output");
     expect(prompt.user).toContain("Target language: Chinese Simplified.");
     expect(prompt.user).toContain("Could you turn it off?");
   });
@@ -38,6 +40,7 @@ describe("translation prompt", () => {
       style: "polished",
       promptProfile: "general",
       mode: "express-intent",
+      expressionTone: "formal",
     });
 
     expect(prompt.system).toContain("cross-language expression coach");
@@ -58,10 +61,15 @@ describe("translation prompt", () => {
       "avoid document-style symbols, and keep sentences short enough",
     );
     expect(prompt.system).toContain("Remove stiff, generic AI-sounding polish");
-    expect(prompt.system).toContain("Return only the final output");
+    expect(prompt.system).toContain("Expression tone:");
+    expect(prompt.system).toContain("more formal and professional");
+    expect(prompt.system).toContain("SkillOpt-style validation gate:");
+    expect(prompt.system).toContain("Meaning gate:");
+    expect(prompt.system).toContain('{"expression": string, "why": string}');
     expect(prompt.user).toContain(
       "Task: Express the source intention naturally",
     );
+    expect(prompt.user).toContain("Expression tone:");
     expect(prompt.user).toContain("Do not mirror its wording");
     expect(prompt.user).toContain("Intention:");
     expect(prompt.user).not.toContain("Text:");
@@ -108,8 +116,11 @@ describe("translateText", () => {
         choices: [
           {
             message: {
-              content:
-                "Could you send me the file by this afternoon when you get a chance?",
+              content: JSON.stringify({
+                expression:
+                  "Could you send me the file by this afternoon when you get a chance?",
+                why: "- 用 could you 保持礼貌，但直接保留今天下午这个期限。\n- when you get a chance 让语气柔和，不把催促写得过重。",
+              }),
             },
           },
         ],
@@ -125,6 +136,7 @@ describe("translateText", () => {
 
     expect(out.targetLanguage).toBe("en");
     expect(out.translation).toContain("Could you send me the file");
+    expect(out.coaching).toContain("could you");
     const body = JSON.parse(
       (fetchImpl as unknown as { mock: { calls: [string, RequestInit][] } })
         .mock.calls[0][1].body as string,
@@ -133,6 +145,9 @@ describe("translateText", () => {
     };
     expect(body.messages[0].content).toContain(
       "cross-language expression coach",
+    );
+    expect(body.messages[0].content).toContain(
+      "SkillOpt-style validation gate",
     );
     expect(body.messages[1].content).toContain("Intention:");
   });

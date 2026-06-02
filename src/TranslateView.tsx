@@ -11,8 +11,10 @@ import { ANALYSIS_MODELS, PROVIDER_IDS } from "./llm/models";
 import {
   resolveTranslationTarget,
   translateText,
+  type ExpressionTone,
   type TranslationPromptMode,
 } from "./llm/translate";
+import { AnalyzeView } from "./AnalyzeView";
 import { getPrefs } from "./lib/preferences";
 import {
   readTranslationCache,
@@ -33,22 +35,39 @@ import {
 
 interface TranslationState {
   translation?: string;
+  coaching?: string;
   targetLanguageTitle?: string;
   isLoading?: boolean;
   failed?: boolean;
   errorMessage?: string;
 }
 
+const EXPRESSION_TONES: ExpressionTone[] = [
+  "natural",
+  "casual",
+  "formal",
+  "concise",
+];
+
+const EXPRESSION_TONE_LABELS: Record<ExpressionTone, string> = {
+  natural: "Natural",
+  casual: "Casual",
+  formal: "Formal",
+  concise: "Concise",
+};
+
 export function TranslateView({
   text,
   mode = "translate",
   title,
   sourceTitle,
+  preferredLanguage,
 }: {
   text: string;
   mode?: TranslationPromptMode;
   title?: string;
   sourceTitle?: string;
+  preferredLanguage?: string;
 }) {
   const prefs = useMemo(() => getPrefs(), []);
   const [storedSelection, setStoredSelection] =
@@ -74,6 +93,7 @@ export function TranslateView({
       mode={mode}
       title={title}
       sourceTitle={sourceTitle}
+      preferredLanguage={preferredLanguage}
       prefs={prefs}
       storedSelection={storedSelection}
     />
@@ -85,6 +105,7 @@ function TranslateViewInner({
   mode,
   title,
   sourceTitle,
+  preferredLanguage,
   prefs,
   storedSelection,
 }: {
@@ -92,6 +113,7 @@ function TranslateViewInner({
   mode: TranslationPromptMode;
   title?: string;
   sourceTitle?: string;
+  preferredLanguage?: string;
   prefs: Preferences;
   storedSelection: RuntimeSelection;
 }) {
@@ -102,6 +124,8 @@ function TranslateViewInner({
   const [analysisModels, setAnalysisModels] = useState<AnalysisModelMap>(() =>
     initialAnalysisModels(prefs, storedSelection),
   );
+  const [expressionTone, setExpressionTone] =
+    useState<ExpressionTone>("natural");
   const [state, setState] = useState<TranslationState>({ isLoading: true });
   const generationRef = useRef(0);
 
@@ -148,7 +172,7 @@ function TranslateViewInner({
 
       const model = resolveAnalysisModel(provider, activePrefs);
       const target = resolveTranslationTarget(
-        prefs.translationTargetLanguage,
+        preferredLanguage ?? prefs.translationTargetLanguage,
         source,
       );
       const key = translationCacheKey({
@@ -156,11 +180,17 @@ function TranslateViewInner({
         provider,
         model,
         targetLanguage: target.language,
-        promptMode: mode === "express-intent" ? mode : undefined,
+        promptMode:
+          mode === "express-intent" ? `${mode}:${expressionTone}` : undefined,
       });
 
       setState((previous) => ({
-        ...(forceFresh ? { translation: previous.translation } : {}),
+        ...(forceFresh
+          ? {
+              translation: previous.translation,
+              coaching: previous.coaching,
+            }
+          : {}),
         isLoading: true,
         failed: false,
         targetLanguageTitle: target.title,
@@ -185,6 +215,8 @@ function TranslateViewInner({
         const result = await translateText(source, cfg, {
           preferredLanguage: target.language,
           mode,
+          expressionTone:
+            mode === "express-intent" ? expressionTone : undefined,
         });
         writeTranslationCache(key, result);
         if (generation === generationRef.current) {
@@ -198,7 +230,12 @@ function TranslateViewInner({
       } catch (err) {
         if (generation === generationRef.current) {
           setState((previous) => ({
-            ...(forceFresh ? { translation: previous.translation } : {}),
+            ...(forceFresh
+              ? {
+                  translation: previous.translation,
+                  coaching: previous.coaching,
+                }
+              : {}),
             isLoading: false,
             failed: true,
             targetLanguageTitle: target.title,
@@ -208,7 +245,15 @@ function TranslateViewInner({
         await reportError(err);
       }
     },
-    [activePrefs, mode, prefs.translationTargetLanguage, provider, source],
+    [
+      activePrefs,
+      expressionTone,
+      mode,
+      preferredLanguage,
+      prefs.translationTargetLanguage,
+      provider,
+      source,
+    ],
   );
 
   useEffect(() => {
@@ -234,6 +279,11 @@ function TranslateViewInner({
     [analysisModels, persistSelection, provider],
   );
 
+  const selectExpressionTone = useCallback((tone: ExpressionTone) => {
+    setExpressionTone(tone);
+    setState({ isLoading: true });
+  }, []);
+
   const onSwitchProvider = useCallback(() => {
     const i = availableProviders.indexOf(provider);
     const next = availableProviders[(i + 1) % availableProviders.length];
@@ -249,13 +299,12 @@ function TranslateViewInner({
 
   const markdown = renderTranslationMarkdown(source, state, {
     title:
-      title ??
-      (mode === "express-intent" ? "Natural Expression" : "Translation"),
+      title ?? (mode === "express-intent" ? "Expression Coach" : "Translation"),
     sourceTitle:
       sourceTitle ?? (mode === "express-intent" ? "Intent" : "Source"),
     emptyLabel:
       mode === "express-intent"
-        ? "Could not express this intent. Use Refresh Translation to try again."
+        ? "Could not express this intent. Use Refresh Expression to try again."
         : undefined,
   });
 
@@ -266,19 +315,32 @@ function TranslateViewInner({
       metadata={
         <Detail.Metadata>
           <Detail.Metadata.Label
-            title="Provider"
+            title={mode === "express-intent" ? "Coach Provider" : "Provider"}
             text={PROVIDER_LABELS[provider]}
           />
-          <Detail.Metadata.Label title="Model" text={analysisModel} />
           <Detail.Metadata.Label
-            title="Target"
+            title={mode === "express-intent" ? "Coach Model" : "Model"}
+            text={analysisModel}
+          />
+          <Detail.Metadata.Label
+            title={mode === "express-intent" ? "Output" : "Target"}
             text={state.targetLanguageTitle ?? "Auto"}
           />
+          {mode === "express-intent" ? (
+            <Detail.Metadata.Label
+              title="Tone"
+              text={EXPRESSION_TONE_LABELS[expressionTone]}
+            />
+          ) : null}
         </Detail.Metadata>
       }
       actions={
         <ActionPanel>
-          <ActionPanel.Section title="Translation">
+          <ActionPanel.Section
+            title={
+              mode === "express-intent" ? "Expression Coach" : "Translation"
+            }
+          >
             <Action.CopyToClipboard
               title={
                 mode === "express-intent"
@@ -294,15 +356,54 @@ function TranslateViewInner({
               shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
             />
             <Action
-              title="Refresh Translation"
+              title={
+                mode === "express-intent"
+                  ? "Refresh Expression"
+                  : "Refresh Translation"
+              }
               icon={Icon.ArrowClockwise}
               shortcut={{ modifiers: ["cmd"], key: "r" }}
               onAction={() => void runTranslation(true)}
             />
+            {mode === "express-intent" && state.translation ? (
+              <Action.Push
+                title="Practice This English"
+                icon={Icon.Microphone}
+                shortcut={{ modifiers: ["cmd"], key: "return" }}
+                target={<AnalyzeView text={state.translation} />}
+              />
+            ) : null}
+            {mode === "express-intent" ? (
+              <ActionPanel.Submenu
+                title={`Tone: ${EXPRESSION_TONE_LABELS[expressionTone]}`}
+                icon={Icon.Text}
+              >
+                {EXPRESSION_TONES.map((tone) => (
+                  <Action
+                    key={tone}
+                    title={EXPRESSION_TONE_LABELS[tone]}
+                    icon={
+                      tone === expressionTone ? Icon.CheckCircle : Icon.Circle
+                    }
+                    onAction={() => selectExpressionTone(tone)}
+                  />
+                ))}
+              </ActionPanel.Submenu>
+            ) : null}
           </ActionPanel.Section>
-          <ActionPanel.Section title="Provider & Model">
+          <ActionPanel.Section
+            title={
+              mode === "express-intent"
+                ? "Coach Provider & Model"
+                : "Provider & Model"
+            }
+          >
             <ActionPanel.Submenu
-              title="Choose Translation Provider"
+              title={
+                mode === "express-intent"
+                  ? "Choose Coach Provider"
+                  : "Choose Translation Provider"
+              }
               icon={Icon.Switch}
             >
               {availableProviders.map((value) => (
@@ -316,7 +417,11 @@ function TranslateViewInner({
             </ActionPanel.Submenu>
             {ANALYSIS_MODELS[provider].length > 1 ? (
               <ActionPanel.Submenu
-                title="Choose Translation Model"
+                title={
+                  mode === "express-intent"
+                    ? "Choose Coach Model"
+                    : "Choose Translation Model"
+                }
                 icon={Icon.Text}
               >
                 {ANALYSIS_MODELS[provider].map((option) => (

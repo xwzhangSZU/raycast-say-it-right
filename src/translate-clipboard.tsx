@@ -23,8 +23,9 @@ export default function Command() {
       <TranslateView
         text={text}
         mode="express-intent"
-        title="Translation"
+        title="Expression Coach"
         sourceTitle="Clipboard"
+        preferredLanguage="en"
       />
     );
   }

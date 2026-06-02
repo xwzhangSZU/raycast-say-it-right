@@ -5,6 +5,7 @@ const cache = new Cache({ namespace: "translation" });
 
 export interface CachedTranslation {
   translation: string;
+  coaching?: string;
   targetLanguage: string;
   targetLanguageTitle: string;
 }
@@ -34,6 +35,8 @@ export function readTranslationCache(key: string): CachedTranslation | null {
     ) {
       return {
         translation: parsed.translation,
+        coaching:
+          typeof parsed.coaching === "string" ? parsed.coaching : undefined,
         targetLanguage: parsed.targetLanguage,
         targetLanguageTitle: parsed.targetLanguageTitle,
       };
