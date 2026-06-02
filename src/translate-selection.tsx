@@ -23,8 +23,9 @@ export default function Command() {
       <TranslateView
         text={text}
         mode="express-intent"
-        title="Translation"
+        title="Expression Coach"
         sourceTitle="Selection"
+        preferredLanguage="en"
       />
     );
   }
@@ -37,5 +38,5 @@ export default function Command() {
       />
     );
   }
-  return <Detail isLoading={true} markdown="# Translating..." />;
+  return <Detail isLoading={true} markdown="# Opening Expression Coach..." />;
 }

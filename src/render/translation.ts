@@ -1,5 +1,6 @@
 export interface TranslationRenderState {
   translation?: string;
+  coaching?: string;
   targetLanguageTitle?: string;
   failed?: boolean;
   errorMessage?: string;
@@ -28,6 +29,12 @@ export function renderTranslationMarkdown(
   lines.push("");
   if (state.translation) {
     lines.push(state.translation);
+    if (state.coaching) {
+      lines.push("");
+      lines.push("## Why This Works");
+      lines.push("");
+      lines.push(state.coaching);
+    }
     if (state.failed && state.errorMessage) {
       lines.push("");
       lines.push(`_Refresh failed: ${state.errorMessage}_`);

@@ -11,8 +11,9 @@ export default function Command() {
       <TranslateView
         text={intent}
         mode="express-intent"
-        title="Translation"
+        title="Expression Coach"
         sourceTitle="What You Mean"
+        preferredLanguage="en"
       />
     );
   }
@@ -20,9 +21,9 @@ export default function Command() {
   return (
     <TextInputForm
       onSubmit={(text) => setIntent(text.trim())}
-      submitTitle="Translate"
+      submitTitle="Say It in English"
       submitIcon={Icon.Message}
-      title="What you mean"
+      title="Say What I Mean"
       placeholder="Type what you mean in Chinese..."
     />
   );

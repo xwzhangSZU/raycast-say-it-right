@@ -36,6 +36,15 @@ const FIDELITY_RULES = `Accuracy requirements:
 - "ipa" is the whole sentence in General American IPA, wrapped in / /, using ˈ for primary and ˌ for secondary stress.
 - Base stress and intonation on standard General American usage, not guesses. If a proper noun is uncertain, give your best standard approximation but keep the syllables faithful to the spelling.`;
 
+const VALIDATION_GATE = `SkillOpt-style validation gate:
+Treat this prompt as a reusable skill artifact. Before final output, internally check the candidate JSON against these gates and repair it once if any gate fails:
+- Schema gate: output is exactly one JSON object matching the requested shape, with no prose or markdown fences.
+- Fidelity gate: the analyzed words exactly match the input words in order, unless a single selected word intentionally generated an example sentence.
+- Syllable gate: concatenating every syllables array reproduces that word's spelling.
+- Prosody gate: every thought group has exactly one nuclear word, and every nuclear word is stressed.
+- Stress gate: stressed=true requires a non-null valid stressIndex; reduced function words may use null.
+- Speakability gate: notes give one concrete coaching tip a learner can apply while speaking.`;
+
 const EXAMPLE_OUTPUT = `Example:
 For input "I'll call you.", return exactly:
 {"text":"I'll call you.","isGeneratedExample":false,"ipa":"/aɪl ˈkɔl ju/","thoughtGroups":[{"tone":"fall","words":[{"text":"I'll","syllables":["I'll"],"stressIndex":null,"stressed":false,"nuclear":false},{"text":"call","syllables":["call"],"stressIndex":0,"stressed":true,"nuclear":true},{"text":"you","syllables":["you"],"stressIndex":null,"stressed":false,"nuclear":false}]}]}`;
@@ -57,6 +66,7 @@ export function buildPrompt(
       "- Use General American IPA.",
     ].join("\n"),
     FIDELITY_RULES,
+    VALIDATION_GATE,
     SCHEMA_HINT,
     EXAMPLE_OUTPUT,
   ].join("\n\n");
