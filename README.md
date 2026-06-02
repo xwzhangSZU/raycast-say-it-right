@@ -18,7 +18,7 @@ Most tools either read text aloud flatly or drill isolated words. Say It Right t
   - **Save the model audio** to Downloads for offline practice.
   - **Step through long passages** sentence by sentence.
   - **Page through long passages** in batches, with each sentence analyzed and cached as it becomes ready.
-- **Expression Coach** — turn selected Chinese intent, clipboard text, or a typed intention into natural English, with a short "Why This Works" note explaining the key wording and tone choices.
+- **Expression Coach** — the former Rewrite & Coach job now lives here: turn selected Chinese intent, clipboard text, or a typed intention into natural English, with a short "Why This Works" note explaining the key wording and tone choices.
 - **Tone presets for expression** — switch generated English between Natural, Casual, Formal, and Concise from the action panel, then send the result straight into pronunciation practice.
 - **Validation-gated prompts** — built-in expression and prosody prompts include SkillOpt-style self-check gates for schema, fidelity, naturalness, speakability, and coaching usefulness.
 - **Translate inside practice** — translate the active sentence or current page for comprehension while studying English text.
@@ -54,7 +54,7 @@ The coaching commands open the same practice view, with every action available i
 | Translate sentence / page         | `⌘T` / `⌘⇧T`  |
 | Practice generated English        | `⌘↵`          |
 
-Expression commands also include a **Tone** picker: Natural, Casual, Formal, or Concise. The action panel includes direct pickers for **coach provider**, **coach model**, **voice provider**, and **voice model**. Runtime choices are remembered, so switching from OpenAI to Qwen once keeps Qwen as the next starting point.
+Expression commands also include a **Tone** picker: Natural, Casual, Formal, or Concise. Preferences keep durable defaults for coach provider/model and voice provider/model; the action panel handles the current task with direct pickers for **coach provider**, **coach model**, **voice provider**, and **voice model**. Runtime choices are remembered, so switching from OpenAI to Qwen once keeps Qwen as the next starting point.
 
 ## Division with AI Translate
 
@@ -72,7 +72,7 @@ Open the extension's preferences and add **at least one** API key:
 - **Gemini** — analysis (`gemini-3.5-flash`) and speech (`gemini-3.1-flash-tts-preview`).
 - **OpenAI** — analysis (`gpt-5.5`) and speech (`gpt-4o-mini-tts`).
 
-Whichever key you fill is used automatically; if you add several, choose preferred defaults at the top of Preferences. Preferences keep only durable setup choices such as keys, base URLs, multi-option models, voices, the practice translation target, sentences per page, and the shadowing-loop count and gap. Per-run provider/model switching lives in the action panel.
+Whichever key you fill is used automatically; if you add several, choose preferred defaults at the top of Preferences. Preferences keep only durable setup choices such as keys, base URLs, default coach model, default voice model, voices, the practice translation target, sentences per page, and the shadowing-loop count and gap. Per-run provider/model switching lives in the action panel.
 
 ## Visualization legend
 
