@@ -80,6 +80,8 @@ declare namespace Preferences {
   export type TranslateClipboard = ExtensionPreferences & {}
   /** Preferences accessible in the `translate-intent` command */
   export type TranslateIntent = ExtensionPreferences & {}
+  /** Preferences accessible in the `saved-results` command */
+  export type SavedResults = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -93,5 +95,7 @@ declare namespace Arguments {
   export type TranslateClipboard = {}
   /** Arguments passed to the `translate-intent` command */
   export type TranslateIntent = {}
+  /** Arguments passed to the `saved-results` command */
+  export type SavedResults = {}
 }
 
