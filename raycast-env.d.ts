@@ -12,13 +12,13 @@ type ExtensionPreferences = {
   "defaultAnalysisProvider": "qwen" | "mimo" | "gemini" | "openai",
   /** Defaults: Voice Provider - Initial provider for model audio. Follow Coach Provider uses the coach provider when its voice key is set, otherwise the first configured voice provider. */
   "ttsProvider": "follow-analysis" | "qwen" | "mimo" | "gemini" | "openai",
-  /** Qwen Coach: Token Plan API Key - Used only for Qwen coaching, expression, and pronunciation analysis. Qwen Voice uses the separate DashScope key below. */
+  /** Qwen Coach: Token Plan API Key - Used only for Qwen coaching, expression, and pronunciation analysis. Qwen Voice uses the separate Qwen DashScope key below. */
   "qwenAnalysisApiKey"?: string,
   /** Qwen Coach: Model - Qwen text model used for pronunciation analysis and natural-English expression. */
   "qwenAnalysisModel": "qwen3.6-flash" | "qwen3.7-plus" | "qwen3.7-max",
-  /** Qwen Voice: DashScope API Key - Used only for Qwen voice playback. Qwen Coach uses the Token Plan key above. */
+  /** Qwen DashScope API Key (Voice) - Used only for Qwen voice playback. Qwen Coach uses the Token Plan key above. */
   "qwenApiKey"?: string,
-  /** Qwen Voice: DashScope Region - DashScope region for Qwen voice playback. */
+  /** Qwen DashScope Region (Voice) - Qwen DashScope region for Qwen voice playback. */
   "qwenRegion": "beijing" | "intl",
   /** Qwen Voice: Model - Qwen TTS model used for read-aloud. */
   "qwenTtsModel": "qwen3-tts-flash" | "qwen3-tts-instruct-flash",
@@ -70,6 +70,8 @@ declare namespace Preferences {
   export type TranslateIntent = ExtensionPreferences & {}
   /** Preferences accessible in the `saved-results` command */
   export type SavedResults = ExtensionPreferences & {}
+  /** Preferences accessible in the `pinned-expressions` command */
+  export type PinnedExpressions = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -85,5 +87,7 @@ declare namespace Arguments {
   export type TranslateIntent = {}
   /** Arguments passed to the `saved-results` command */
   export type SavedResults = {}
+  /** Arguments passed to the `pinned-expressions` command */
+  export type PinnedExpressions = {}
 }
 
