@@ -4,3 +4,8 @@ node_modules/
 .DS_Store
 dist/
 *.log
+
+# Internal agent/dev working notes & eval logs — never publish.
+docs/evals/
+docs/*-plan.md
+docs/*-rollout.md
