@@ -389,6 +389,14 @@ function TranslateViewInner({
               mode === "express-intent" ? "Expression Coach" : "Translation"
             }
           >
+            {mode === "express-intent" && state.translation ? (
+              <Action.Push
+                title="Practice This English"
+                icon={Icon.Microphone}
+                shortcut={{ modifiers: ["cmd"], key: "return" }}
+                target={<AnalyzeView text={state.translation} />}
+              />
+            ) : null}
             <Action.CopyToClipboard
               title={
                 mode === "express-intent"
@@ -434,14 +442,6 @@ function TranslateViewInner({
               shortcut={{ modifiers: ["cmd"], key: "r" }}
               onAction={() => void runTranslation(true)}
             />
-            {mode === "express-intent" && state.translation ? (
-              <Action.Push
-                title="Practice This English"
-                icon={Icon.Microphone}
-                shortcut={{ modifiers: ["cmd"], key: "return" }}
-                target={<AnalyzeView text={state.translation} />}
-              />
-            ) : null}
             {mode === "express-intent" ? (
               <ActionPanel.Submenu
                 title={`Tone: ${EXPRESSION_TONE_LABELS[expressionTone]}`}
