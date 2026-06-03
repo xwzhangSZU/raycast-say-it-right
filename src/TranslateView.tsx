@@ -40,6 +40,7 @@ import {
   type RuntimeSelection,
 } from "./lib/runtime-selection";
 import { saveResult } from "./lib/saved-results";
+import { saveToFloatingNote } from "./lib/floating-note";
 
 interface TranslationState {
   translation?: string;
@@ -420,16 +421,17 @@ function TranslateViewInner({
               />
             ) : null}
             {state.translation ? (
-              <Action.CreateSnippet
-                title="Create Raycast Snippet"
-                icon={Icon.Text}
-                snippet={{
-                  name:
-                    mode === "express-intent"
-                      ? "Say It Right Expression"
-                      : "Say It Right Translation",
-                  text: state.translation,
-                }}
+              <Action
+                title="Save to Floating Note"
+                icon={Icon.Window}
+                shortcut={{ modifiers: ["cmd", "shift"], key: "f" }}
+                onAction={() =>
+                  void saveToFloatingNote({
+                    expression: state.translation ?? "",
+                    source,
+                    coaching: state.coaching,
+                  })
+                }
               />
             ) : null}
             <Action
