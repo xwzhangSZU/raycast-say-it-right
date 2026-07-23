@@ -550,10 +550,10 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@raycast/eslint-config": "^1.0.11",
+    "@raycast/eslint-config": "^2.2.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
-    "eslint": "^8.57.0",
+    "eslint": "^10.7.0",
     "prettier": "^3.3.0",
     "typescript": "^5.5.0",
     "vitest": "^3.2.6"
